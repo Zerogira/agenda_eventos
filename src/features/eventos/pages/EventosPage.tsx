@@ -225,9 +225,15 @@ export function EventosPage() {
                       <TableCell className="font-medium">{evento.titulo}</TableCell>
                       <TableCell>{evento.clienteNome}</TableCell>
                       <TableCell>
-                        {format(new Date(evento.dataInicio), "dd/MM/yyyy HH:mm", {
-                          locale: ptBR,
-                        })}
+                        {(() => {
+                          try {
+                            const date = new Date(evento.dataInicio);
+                            if (isNaN(date.getTime())) return "Data inválida";
+                            return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+                          } catch {
+                            return "Data inválida";
+                          }
+                        })()}
                       </TableCell>
                       <TableCell>{getStatusBadge(evento.status)}</TableCell>
                       <TableCell className="text-right">

@@ -39,7 +39,6 @@ import { useClientes } from "@/features/clientes/api/use-clientes";
 import { useBrinquedos } from "@/features/brinquedos/api/use-brinquedos";
 import { useFuncionarios } from "@/features/funcionarios/api/use-funcionarios";
 import { useCreateEvento, useUpdateEvento, useDeleteEvento } from "../api/use-eventos";
-import { format } from "date-fns";
 
 interface EventoFormProps {
   onSuccess: () => void;
