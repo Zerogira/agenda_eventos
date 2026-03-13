@@ -7,4 +7,8 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authMiddleware);
 router.get('/', brinquedo_controller_1.listBrinquedos);
 router.post('/', brinquedo_controller_1.createBrinquedo);
+router.get('/:id', brinquedo_controller_1.getBrinquedo);
+router.put('/:id', brinquedo_controller_1.updateBrinquedo);
+router.patch('/:id', brinquedo_controller_1.updateBrinquedo);
+router.delete('/:id', brinquedo_controller_1.deleteBrinquedo);
 exports.default = router;

@@ -47,7 +47,6 @@ interface EventoFormProps {
 
 interface SelectedBrinquedo extends Brinquedo {
     quantidade: number;
-    valorUnitario?: number;
 }
 
 export function EventoForm({ onSuccess, initialData, eventoId }: EventoFormProps) {

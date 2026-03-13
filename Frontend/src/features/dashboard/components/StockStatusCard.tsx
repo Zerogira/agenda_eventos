@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Tool, CheckCircle, Clock } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { useBrinquedos } from '@/features/brinquedos/api/use-brinquedos';
 import { useEventos } from '@/features/eventos/api/use-eventos';
 import { Link } from 'react-router-dom';

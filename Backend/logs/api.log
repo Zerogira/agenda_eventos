@@ -127,3 +127,7 @@
 {"level":30,"time":"2026-03-12T17:02:52.459Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":40,"msg":"request completed"}
 {"level":30,"time":"2026-03-12T18:09:22.093Z","req":{"method":"GET","url":"/"},"res":{"statusCode":404},"responseTime":104,"msg":"request completed"}
 {"level":30,"time":"2026-03-12T18:09:34.122Z","req":{"method":"GET","url":"/"},"res":{"statusCode":404},"responseTime":2,"msg":"request completed"}
+{"level":40,"time":"2026-03-13T18:26:29.233Z","req":{"method":"POST","url":"/api/auth/login"},"action":"login_failed","email":"admin@admin.com","msg":"Tentativa de login com email inexistente"}
+{"level":30,"time":"2026-03-13T18:26:29.237Z","req":{"method":"POST","url":"/api/auth/login"},"res":{"statusCode":401},"responseTime":66,"msg":"request completed"}
+{"level":40,"time":"2026-03-13T18:26:52.411Z","req":{"method":"POST","url":"/api/auth/login"},"action":"login_failed","email":"admin@admin.com","msg":"Tentativa de login com email inexistente"}
+{"level":30,"time":"2026-03-13T18:26:52.412Z","req":{"method":"POST","url":"/api/auth/login"},"res":{"statusCode":401},"responseTime":4,"msg":"request completed"}

@@ -9,7 +9,10 @@ export const eventoSchema = z.object({
   data: z.string().refine((val) => !isNaN(Date.parse(val)), "Data inválida"),
   horaInicio: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Hora inválida"),
   horaFim: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Hora inválida"),
-  clienteId: z.coerce.number({ required_error: "Selecione um cliente" }).min(1, "Selecione um cliente"),
+  clienteId: z.coerce
+    .number()
+    .refine((v) => Number.isFinite(v), "Selecione um cliente")
+    .min(1, "Selecione um cliente"),
   clienteNome: z.string().optional(),
   status: z.enum(['AGENDADO', 'CONCLUIDO', 'CANCELADO']),
   valor: z.coerce.number().min(0, "Valor deve ser maior ou igual a 0"),
@@ -45,8 +48,8 @@ export interface Evento extends Omit<EventoFormData, 'brinquedos' | 'funcionario
   endereco?: string;
   numero?: string;
   bairro?: string;
-  cidade?: string;
-  estado?: string;
+  cidade: string;
+  estado: string;
   brinquedos: Brinquedo[];
   funcionarios: Funcionario[];
   createdAt: string; // ISO

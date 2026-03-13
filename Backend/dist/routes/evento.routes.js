@@ -9,5 +9,8 @@ router.get('/', evento_controller_1.listEventos);
 router.post('/', evento_controller_1.createEvento);
 router.get('/:id', evento_controller_1.getEvento);
 router.patch('/:id/status', evento_controller_1.updateStatus);
+router.patch('/:id/concluir', evento_controller_1.concluirEvento);
+router.put('/:id', evento_controller_1.updateEvento);
+router.patch('/:id', evento_controller_1.updateEvento);
 router.delete('/:id', evento_controller_1.deleteEvento);
 exports.default = router;

@@ -12,61 +12,132 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBrinquedo = exports.listBrinquedos = void 0;
+exports.deleteBrinquedo = exports.updateBrinquedo = exports.getBrinquedo = exports.createBrinquedo = exports.listBrinquedos = void 0;
 const prisma_1 = __importDefault(require("../prisma"));
-const zod_1 = require("zod");
-const createBrinquedoSchema = zod_1.z.object({
-    nome: zod_1.z.string().min(3),
-    descricao: zod_1.z.string().optional(),
-    marca: zod_1.z.string().optional(),
-    quantidade_total: zod_1.z.number().int().min(0),
-    necessita_funcionario: zod_1.z.boolean().optional(),
-    ativo: zod_1.z.boolean().optional(),
-});
-const listBrinquedos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const brinquedo_validator_1 = require("../validators/brinquedo.validator");
+const AppError_1 = require("../utils/AppError");
+const listBrinquedos = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const empresaId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.empresaId;
         if (!empresaId)
-            return res.status(401).json({ message: 'Unauthorized' });
+            throw new AppError_1.AppError('Unauthorized', 401);
         const brinquedos = yield prisma_1.default.brinquedo.findMany({
             where: { empresaId },
             orderBy: { nome: 'asc' },
         });
-        res.json(brinquedos);
+        res.json({ success: true, data: brinquedos });
     }
     catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        next(error);
     }
 });
 exports.listBrinquedos = listBrinquedos;
-const createBrinquedo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const createBrinquedo = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
-        const data = createBrinquedoSchema.parse(req.body);
+        const data = brinquedo_validator_1.createBrinquedoSchema.parse(req.body);
         const empresaId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.empresaId;
         if (!empresaId)
-            return res.status(401).json({ message: 'Unauthorized' });
+            throw new AppError_1.AppError('Unauthorized', 401);
         const brinquedo = yield prisma_1.default.brinquedo.create({
             data: Object.assign(Object.assign({}, data), { empresaId }),
         });
-        res.status(201).json(brinquedo);
+        req.log.info({
+            action: 'create_brinquedo',
+            empresaId,
+            usuarioId: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id,
+            brinquedoId: brinquedo.id,
+            nome: brinquedo.nome
+        }, 'Brinquedo criado com sucesso');
+        res.status(201).json({ success: true, data: brinquedo });
     }
     catch (error) {
-        if (error instanceof zod_1.z.ZodError) {
-            return res.status(400).json({
-                statusCode: 400,
-                message: 'Validation Error',
-                errors: error.errors.map(e => e.message),
-            });
-        }
-        console.error(error);
-        res.status(500).json({
-            statusCode: 500,
-            message: 'Internal server error',
-            errors: [error.message]
-        });
+        next(error);
     }
 });
 exports.createBrinquedo = createBrinquedo;
+const getBrinquedo = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { id } = req.params;
+        const empresaId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.empresaId;
+        if (!empresaId)
+            throw new AppError_1.AppError('Unauthorized', 401);
+        const brinquedo = yield prisma_1.default.brinquedo.findUnique({
+            where: { id: Number(id) },
+        });
+        if (!brinquedo || brinquedo.empresaId !== empresaId) {
+            throw new AppError_1.AppError('Brinquedo não encontrado', 404);
+        }
+        res.json({ success: true, data: brinquedo });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getBrinquedo = getBrinquedo;
+const updateBrinquedo = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    try {
+        const { id } = req.params;
+        // Use partial schema for updates, or full schema if you expect full replacement
+        // Based on user request "campos obrigatórios devem ser verificados", usually PUT implies full replacement or validation of provided fields.
+        // If the frontend sends the whole object, createBrinquedoSchema works.
+        // However, for robust APIs, if I send only { nome: "Novo" }, it should work if it's PATCH.
+        // Express doesn't strictly distinguish PUT/PATCH body validation unless we force it.
+        // I'll use updateBrinquedoSchema which is partial, BUT check if mandatory fields are null in DB if creating? No, this is update.
+        // If user wants to enforce "valorUnitario" is present, they should send it.
+        // But if the frontend sends the whole object, createBrinquedoSchema is safer to ensure nothing is missing.
+        // I will use createBrinquedoSchema because the previous code used it, implying full update.
+        const data = brinquedo_validator_1.createBrinquedoSchema.parse(req.body);
+        const empresaId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.empresaId;
+        if (!empresaId)
+            throw new AppError_1.AppError('Unauthorized', 401);
+        const brinquedo = yield prisma_1.default.brinquedo.findUnique({
+            where: { id: Number(id) },
+        });
+        if (!brinquedo || brinquedo.empresaId !== empresaId) {
+            throw new AppError_1.AppError('Brinquedo não encontrado', 404);
+        }
+        const updatedBrinquedo = yield prisma_1.default.brinquedo.update({
+            where: { id: Number(id) },
+            data: Object.assign({}, data),
+        });
+        req.log.info({
+            action: 'update_brinquedo',
+            empresaId,
+            usuarioId: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id,
+            brinquedoId: updatedBrinquedo.id,
+            nome: updatedBrinquedo.nome
+        }, 'Brinquedo atualizado com sucesso');
+        res.json({ success: true, data: updatedBrinquedo });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updateBrinquedo = updateBrinquedo;
+const deleteBrinquedo = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { id } = req.params;
+        const empresaId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.empresaId;
+        if (!empresaId)
+            throw new AppError_1.AppError('Unauthorized', 401);
+        const brinquedo = yield prisma_1.default.brinquedo.findUnique({
+            where: { id: Number(id) },
+        });
+        if (!brinquedo || brinquedo.empresaId !== empresaId) {
+            throw new AppError_1.AppError('Brinquedo não encontrado', 404);
+        }
+        yield prisma_1.default.brinquedo.delete({
+            where: { id: Number(id) },
+        });
+        res.status(200).json({ success: true, message: 'Brinquedo excluído com sucesso' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.deleteBrinquedo = deleteBrinquedo;

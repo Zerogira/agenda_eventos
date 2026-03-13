@@ -7,4 +7,8 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authMiddleware);
 router.get('/', funcionario_controller_1.listFuncionarios);
 router.post('/', funcionario_controller_1.createFuncionario);
+router.get('/:id', funcionario_controller_1.getFuncionario);
+router.put('/:id', funcionario_controller_1.updateFuncionario);
+router.patch('/:id', funcionario_controller_1.updateFuncionario);
+router.delete('/:id', funcionario_controller_1.deleteFuncionario);
 exports.default = router;
