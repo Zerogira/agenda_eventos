@@ -1,0 +1,17 @@
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      Usuario? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // CREATE, UPDATE, DELETE, LOGIN, ETC
+  resource  String   // Evento, Cliente, etc.
+  resourceId String? // ID do recurso afetado (convertido para string)
+  details   Json?    // Detalhes da mudança (antes/depois)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}

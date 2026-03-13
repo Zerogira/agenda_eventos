@@ -1,0 +1,175 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Empresa {
+  id        String   @id @default(uuid())
+  nome      String
+  cnpj      String?
+  usuarios  Usuario[]
+  clientes  Cliente[]
+  funcionarios Funcionario[]
+  brinquedos Brinquedo[]
+  eventos   Evento[]
+  convites  ConviteEmpresa[]
+  auditLogs AuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("empresas")
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nome      String
+  email     String   @unique
+  senha     String   // Hash
+  role      String   @default("ADMIN") // SUPER_ADMIN, ADMIN, USER
+  auditLogs AuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nome      String
+  telefone  String
+  cidade    String
+  eventos   Evento[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("clientes")
+}
+
+model Funcionario {
+  id        Int      @id @default(autoincrement())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nome      String
+  cpf       String
+  telefone  String
+  ativo     Boolean  @default(true)
+  eventos   EventoFuncionario[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("funcionarios")
+}
+
+model Brinquedo {
+  id                   Int      @id @default(autoincrement())
+  empresaId            String
+  empresa              Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nome                 String
+  descricao            String?
+  marca                String?
+  quantidade_total     Int      @default(0)
+  valorUnitario        Decimal  @default(0) @db.Decimal(10, 2)
+  necessita_funcionario Boolean @default(false)
+  ativo                Boolean  @default(true)
+  eventos              EventoBrinquedo[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("brinquedos")
+}
+
+enum StatusEvento {
+  AGENDADO
+  CONFIRMADO
+  FINALIZADO
+  CANCELADO
+  CONCLUIDO
+}
+
+model Evento {
+  id           String   @id @default(uuid())
+  empresaId    String
+  empresa      Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  clienteId    Int
+  cliente      Cliente  @relation(fields: [clienteId], references: [id])
+  titulo       String
+  descricao    String?
+  dataInicio   DateTime
+  dataFim      DateTime
+  status       StatusEvento @default(AGENDADO)
+  valorTotal   Decimal?  @db.Decimal(10, 2)
+  
+  endereco     String?
+  numero       String?
+  bairro       String?
+  cidade       String?
+  estado       String?
+
+  brinquedos   EventoBrinquedo[]
+  funcionarios EventoFuncionario[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("eventos")
+}
+
+model EventoBrinquedo {
+  eventoId    String
+  evento      Evento    @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  brinquedoId Int
+  brinquedo   Brinquedo @relation(fields: [brinquedoId], references: [id])
+  quantidade  Int
+
+  @@id([eventoId, brinquedoId])
+  @@map("evento_brinquedos")
+}
+
+model EventoFuncionario {
+  eventoId      String
+  evento        Evento      @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  funcionarioId Int
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id])
+
+  @@id([eventoId, funcionarioId])
+  @@map("evento_funcionarios")
+}
+
+model ConviteEmpresa {
+  id        String   @id @default(uuid())
+  codigo    String   @unique
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  usado     Boolean  @default(false)
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@map("convites_empresa")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      Usuario? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // CREATE, UPDATE, DELETE, LOGIN, ETC
+  resource  String   // Evento, Cliente, etc.
+  resourceId String? // ID do recurso afetado (convertido para string)
+  details   Json?    // Detalhes da mudança (antes/depois)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
