@@ -9,7 +9,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d agenda_eventos"]
       interval: 5s
@@ -27,6 +27,15 @@ services:
       LOG_LEVEL: "info"
       JWT_SECRET: "mude_isto_em_producao"
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/agenda_eventos?schema=public"
+      # Seed Configuration
+      SEED_EMPRESA_NOME: "Empresa ADM Padrão"
+      SEED_ADMIN_EMAIL: "admin@local.com"
+      SEED_ADMIN_PASSWORD: "Admin123"
+      SEED_INVITE_CODE: "MASTER-1234"
+      SEED_INVITE_EXPIRES_AT: "2099-01-01T00:00:00.000Z"
+      # Fake Data Configuration
+      ENABLE_FAKE_DATA: "true"
+      FAKE_DATA_VOLUME: "500"
     volumes:
       - ./Backend/logs:/app/logs
     depends_on:
