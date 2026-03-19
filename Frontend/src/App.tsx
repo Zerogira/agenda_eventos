@@ -11,6 +11,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       <Toaster />
+      <SpeedInsights />
     </QueryClientProvider>
   )
 }
