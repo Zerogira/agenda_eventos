@@ -64,6 +64,27 @@ export const updateEvento = async (req: Request, res: Response, next: NextFuncti
       }
     }
 
+    // Validação de Funcionários Necessários para Atualização
+    if (brinquedosIds && brinquedosIds.length > 0) {
+      const brinquedosDB = await prisma.brinquedo.findMany({
+        where: { id: { in: brinquedosIds } }
+      });
+
+      let totalFuncNecessarios = 0;
+      brinquedosIds.forEach(bId => {
+        const toy = brinquedosDB.find(t => t.id === bId);
+        if (toy?.necessita_funcionario) {
+          totalFuncNecessarios += 1; // Na atualização atual, cada brinquedo conta como 1
+        }
+      });
+
+      const totalFuncEscalados = funcionariosIds?.length || 0;
+
+      if (totalFuncEscalados < totalFuncNecessarios) {
+        throw new AppError(`Funcionários insuficientes. O evento necessita de pelo menos ${totalFuncNecessarios} funcionário(s) para os brinquedos selecionados.`);
+      }
+    }
+
     const updatedEvento = await prisma.evento.update({
       where: { id },
       data: {
@@ -235,6 +256,28 @@ export const createEvento = async (req: Request, res: Response, next: NextFuncti
     
     if (!cliente || cliente.empresaId !== empresaId) {
         throw new AppError('Cliente não encontrado');
+    }
+
+    // Validação de Funcionários Necessários
+    if (brinquedos && brinquedos.length > 0) {
+      const brinquedoIds = brinquedos.map(b => b.brinquedoId);
+      const brinquedosDB = await prisma.brinquedo.findMany({
+        where: { id: { in: brinquedoIds } }
+      });
+
+      let totalFuncNecessarios = 0;
+      brinquedos.forEach(b => {
+        const toy = brinquedosDB.find(t => t.id === b.brinquedoId);
+        if (toy?.necessita_funcionario) {
+          totalFuncNecessarios += b.quantidade;
+        }
+      });
+
+      const totalFuncEscalados = funcionarios?.length || 0;
+
+      if (totalFuncEscalados < totalFuncNecessarios) {
+        throw new AppError(`Funcionários insuficientes. O evento necessita de pelo menos ${totalFuncNecessarios} funcionário(s) para os brinquedos selecionados.`);
+      }
     }
 
     const evento = await prisma.evento.create({

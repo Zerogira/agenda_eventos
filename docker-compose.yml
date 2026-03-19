@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: agenda_eventos
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: Zerogira1227**
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -23,9 +23,10 @@ services:
       dockerfile: Dockerfile
     container_name: agenda_eventos_backend
     environment:
+      NODE_ENV: "production"
       PORT: "3000"
       LOG_LEVEL: "info"
-      JWT_SECRET: "mude_isto_em_producao"
+      JWT_SECRET: "f7f4d9b3a2c5e8b1d4f7a0c3b6e9d2f5a8c1b4e7d0f3a6c9b2e5d8a1c4b7e0d3"
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/agenda_eventos?schema=public"
       # Seed Configuration
       SEED_EMPRESA_NOME: "Empresa ADM Padrão"
@@ -34,8 +35,8 @@ services:
       SEED_INVITE_CODE: "MASTER-1234"
       SEED_INVITE_EXPIRES_AT: "2099-01-01T00:00:00.000Z"
       # Fake Data Configuration
-      ENABLE_FAKE_DATA: "true"
-      FAKE_DATA_VOLUME: "500"
+      ENABLE_FAKE_DATA: "false"
+      FAKE_DATA_VOLUME: "0"
     volumes:
       - ./Backend/logs:/app/logs
     depends_on:

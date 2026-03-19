@@ -283,3 +283,11 @@
 {"level":30,"time":"2026-03-17T19:17:09.943Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":104,"msg":"request completed"}
 {"level":30,"time":"2026-03-17T19:17:09.962Z","req":{"method":"GET","url":"/api/clientes"},"res":{"statusCode":304},"responseTime":88,"msg":"request completed"}
 {"level":30,"time":"2026-03-17T19:17:09.979Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":22,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:03.892Z","req":{"method":"POST","url":"/api/auth/login"},"action":"login_success","empresaId":"4dd1a7e8-d1f5-4655-b2aa-f80475038959","userId":"ba549bb1-5ed7-448f-89fb-59040ab26615","email":"admin@admin.com","msg":"Login realizado com sucesso"}
+{"level":30,"time":"2026-03-18T17:22:03.896Z","req":{"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":217,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:03.985Z","req":{"method":"GET","url":"/api/clientes"},"res":{"statusCode":200},"responseTime":31,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:03.993Z","req":{"method":"GET","url":"/api/brinquedos"},"res":{"statusCode":200},"responseTime":30,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:04.000Z","req":{"method":"GET","url":"/api/funcionarios"},"res":{"statusCode":200},"responseTime":35,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:04.014Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":200},"responseTime":53,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:04.031Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":7,"msg":"request completed"}
+{"level":30,"time":"2026-03-18T17:22:16.058Z","req":{"method":"GET","url":"/api/eventos/bdc9b752-0a51-4c68-94f9-ae5e92c86090"},"res":{"statusCode":200},"responseTime":16,"msg":"request completed"}

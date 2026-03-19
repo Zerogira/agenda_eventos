@@ -347,6 +347,18 @@ export function EventoForm({ onSuccess, initialData, eventoId }: EventoFormProps
   async function onSubmit(values: EventoFormData) {
     console.log("Submitting:", values); // Debug
     
+    // Validação de Funcionários Necessários
+    const brinquedosQueNecessitamFuncionario = selectedBrinquedos.filter(b => b.necessita_funcionario);
+    const totalFuncionariosNecessarios = brinquedosQueNecessitamFuncionario.reduce((acc, b) => acc + b.quantidade, 0);
+    const totalFuncionariosSelecionados = selectedFuncionarios.length;
+
+    if (totalFuncionariosSelecionados < totalFuncionariosNecessarios) {
+      toast.error(`Funcionários insuficientes! Este evento precisa de no mínimo ${totalFuncionariosNecessarios} funcionário(s) devido aos brinquedos selecionados, mas apenas ${totalFuncionariosSelecionados} foi(foram) escalado(s).`, {
+        duration: 5000,
+      });
+      return;
+    }
+
     // Constrói dataInicio e dataFim ISO Strings para o backend
     const dataInicioISO = `${values.data}T${values.horaInicio}:00Z`; // Assumindo UTC por simplicidade, ou use date-fns para ajustar timezone
     const dataFimISO = `${values.data}T${values.horaFim}:00Z`;
