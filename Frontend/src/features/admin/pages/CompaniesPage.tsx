@@ -24,6 +24,7 @@ import { Plus, Loader2, Copy, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import InputMask from "react-input-mask";
 
 export function CompaniesPage() {
   const { data: empresas, isLoading } = useEmpresas();
@@ -139,11 +140,15 @@ export function CompaniesPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="create-cnpj">CNPJ (Opcional)</Label>
-                <Input
-                  id="create-cnpj"
+                <InputMask
+                  mask="99.999.999/9999-99"
                   value={cnpj}
                   onChange={(e) => setCnpj(e.target.value)}
-                />
+                >
+                  {(inputProps: any) => (
+                    <Input id="create-cnpj" placeholder="00.000.000/0000-00" {...inputProps} />
+                  )}
+                </InputMask>
               </div>
               <Button type="submit" className="w-full" disabled={isCreating}>
                 {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Empresa"}
@@ -227,11 +232,15 @@ export function CompaniesPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-cnpj">CNPJ (Opcional)</Label>
-              <Input
-                id="edit-cnpj"
+              <InputMask
+                mask="99.999.999/9999-99"
                 value={cnpj}
                 onChange={(e) => setCnpj(e.target.value)}
-              />
+              >
+                {(inputProps: any) => (
+                  <Input id="edit-cnpj" placeholder="00.000.000/0000-00" {...inputProps} />
+                )}
+              </InputMask>
             </div>
             <DialogFooter>
                <Button type="button" variant="outline" onClick={() => setOpenEdit(false)}>Cancelar</Button>
