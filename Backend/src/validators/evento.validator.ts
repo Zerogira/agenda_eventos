@@ -32,8 +32,11 @@ export const updateEventoSchema = z.object({
   dataFim: z.string().datetime().optional(),
   status: z.enum(['AGENDADO', 'CONFIRMADO', 'FINALIZADO', 'CANCELADO', 'CONCLUIDO']).optional(),
   valor: z.number().optional(),
-  brinquedosIds: z.array(z.number().int()).optional(),
-  funcionariosIds: z.array(z.number().int()).optional(),
+  brinquedos: z.array(z.object({
+    brinquedoId: z.number().int(),
+    quantidade: z.number().int().min(1),
+  })).optional(),
+  funcionarios: z.array(z.number().int()).optional(),
   // Endereço
   endereco: z.string().optional(),
   numero: z.string().optional(),

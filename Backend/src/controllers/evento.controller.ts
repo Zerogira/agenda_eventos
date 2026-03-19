@@ -10,7 +10,7 @@ export const updateEvento = async (req: Request, res: Response, next: NextFuncti
     const { id } = req.params;
     const { 
       titulo, descricao, clienteId, dataInicio, dataFim, status, valor, 
-      brinquedosIds, funcionariosIds,
+      brinquedos, funcionarios,
       endereco, numero, bairro, cidade, estado 
     } = updateEventoSchema.parse(req.body);
     const empresaId = req.user?.empresaId;
@@ -28,28 +28,29 @@ export const updateEvento = async (req: Request, res: Response, next: NextFuncti
       throw new AppError('Evento não encontrado', 404);
     }
 
-    // Validate brinquedosIds if provided
-    if (brinquedosIds && brinquedosIds.length > 0) {
+    // Validate brinquedos if provided
+    if (brinquedos && brinquedos.length > 0) {
+      const brinquedoIds = brinquedos.map(b => b.brinquedoId);
       const existingBrinquedos = await prisma.brinquedo.findMany({
         where: {
-          id: { in: brinquedosIds },
+          id: { in: brinquedoIds },
           empresaId,
         },
       });
-      if (existingBrinquedos.length !== brinquedosIds.length) {
+      if (existingBrinquedos.length !== brinquedoIds.length) {
         throw new AppError('Um ou mais brinquedos não encontrados ou não pertencem a esta empresa');
       }
     }
 
-    // Validate funcionariosIds if provided
-    if (funcionariosIds && funcionariosIds.length > 0) {
+    // Validate funcionarios if provided
+    if (funcionarios && funcionarios.length > 0) {
       const existingFuncionarios = await prisma.funcionario.findMany({
         where: {
-          id: { in: funcionariosIds },
+          id: { in: funcionarios },
           empresaId,
         },
       });
-      if (existingFuncionarios.length !== funcionariosIds.length) {
+      if (existingFuncionarios.length !== funcionarios.length) {
         throw new AppError('Um ou mais funcionários não encontrados ou não pertencem a esta empresa');
       }
     }
@@ -65,20 +66,21 @@ export const updateEvento = async (req: Request, res: Response, next: NextFuncti
     }
 
     // Validação de Funcionários Necessários para Atualização
-    if (brinquedosIds && brinquedosIds.length > 0) {
+    if (brinquedos && brinquedos.length > 0) {
+      const brinquedoIds = brinquedos.map(b => b.brinquedoId);
       const brinquedosDB = await prisma.brinquedo.findMany({
-        where: { id: { in: brinquedosIds } }
+        where: { id: { in: brinquedoIds } }
       });
 
       let totalFuncNecessarios = 0;
-      brinquedosIds.forEach(bId => {
-        const toy = brinquedosDB.find(t => t.id === bId);
+      brinquedos.forEach(b => {
+        const toy = brinquedosDB.find(t => t.id === b.brinquedoId);
         if (toy?.necessita_funcionario) {
-          totalFuncNecessarios += 1; // Na atualização atual, cada brinquedo conta como 1
+          totalFuncNecessarios += b.quantidade;
         }
       });
 
-      const totalFuncEscalados = funcionariosIds?.length || 0;
+      const totalFuncEscalados = funcionarios?.length || 0;
 
       if (totalFuncEscalados < totalFuncNecessarios) {
         throw new AppError(`Funcionários insuficientes. O evento necessita de pelo menos ${totalFuncNecessarios} funcionário(s) para os brinquedos selecionados.`);
@@ -101,16 +103,16 @@ export const updateEvento = async (req: Request, res: Response, next: NextFuncti
         bairro,
         cidade,
         estado,
-        brinquedos: brinquedosIds ? {
+        brinquedos: brinquedos ? {
           deleteMany: {},
-          create: brinquedosIds.map(id => ({
-            brinquedoId: id,
-            quantidade: 1, // Default quantity 1 as per simple list
+          create: brinquedos.map(b => ({
+            brinquedoId: b.brinquedoId,
+            quantidade: b.quantidade,
           })),
         } : undefined,
-        funcionarios: funcionariosIds ? {
+        funcionarios: funcionarios ? {
           deleteMany: {},
-          create: funcionariosIds.map(id => ({
+          create: funcionarios.map(id => ({
             funcionarioId: id,
           })),
         } : undefined,
@@ -197,6 +199,11 @@ export const listEventos = async (req: Request, res: Response, next: NextFunctio
       createdAt: evento.createdAt,
       cliente: evento.cliente,
       valor: evento.valorTotal ? Number(evento.valorTotal) : 0,
+      endereco: evento.endereco,
+      numero: evento.numero,
+      bairro: evento.bairro,
+      cidade: evento.cidade,
+      estado: evento.estado,
       brinquedos: evento.brinquedos.map(eb => ({
         ...eb.brinquedo,
         quantidade: eb.quantidade

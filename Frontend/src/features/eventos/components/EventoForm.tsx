@@ -70,23 +70,26 @@ export function EventoForm({ onSuccess, initialData, eventoId }: EventoFormProps
 
   const isSubmitting = isCreating || isUpdating || isDeleting;
   
-  // Helper para extrair data e hora de uma string ISO ou completa
+  // Helper para extrair data e hora de uma string ISO respeitando o fuso local
   function getInitialDate() {
     if (eventData?.dataInicio) {
-        // Se contém T, é ISO (yyyy-mm-ddThh:mm)
-        if (eventData.dataInicio.includes('T')) {
-             return eventData.dataInicio.split('T')[0];
-        }
-        // Se não, pode ser apenas a data (yyyy-mm-dd) do dayGrid
-        return eventData.dataInicio;
+        const date = new Date(eventData.dataInicio);
+        // Retorna YYYY-MM-DD em fuso local
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
     return new Date().toISOString().split('T')[0];
   }
 
   function getInitialTime(isoString?: string) {
-    if (isoString && isoString.includes('T')) {
-      // Se for ISO completo, extrai hora
-      return isoString.split('T')[1]?.substring(0, 5) || "00:00";
+    if (isoString) {
+      const date = new Date(isoString);
+      // Retorna HH:mm em fuso local
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
     }
     return "00:00";
   }
@@ -165,73 +168,38 @@ export function EventoForm({ onSuccess, initialData, eventoId }: EventoFormProps
     if (eventData) {
         // Pre-fill selected items based on IDs from eventData
         if (eventData.brinquedos && eventData.brinquedos.length > 0) {
-            // Se o backend retornar os objetos completos, use-os
-            if (typeof eventData.brinquedos[0] === 'object' && 'nome' in eventData.brinquedos[0]) {
-                 // Remove duplicates by ID just in case backend sends duplicates
-                 const uniqueBrinquedos = new Map();
-                 eventData.brinquedos.forEach((b: any) => {
-                     if (!uniqueBrinquedos.has(b.id)) {
-                         uniqueBrinquedos.set(b.id, {
-                             ...b,
-                             quantidade: b.quantidade || 1
-                         });
-                     }
-                 });
-                 setSelectedBrinquedos(Array.from(uniqueBrinquedos.values()));
-            } 
-            // Se retornar apenas a estrutura { brinquedoId, quantidade }, precisamos encontrar o objeto completo na lista de brinquedos
-            else if (brinquedos.length > 0) {
-                const uniqueIds = new Set();
-                const mappedBrinquedos = eventData.brinquedos.map(eb => {
-                    // Tenta extrair ID de várias formas possíveis
-                    const bId = (eb as any).brinquedoId || (eb as any).id || (eb as any).brinquedo?.id;
-                    
-                    if (uniqueIds.has(bId)) return null; // Avoid duplicates
-                    uniqueIds.add(bId);
-
-                    const brinquedo = brinquedos.find(b => b.id === bId);
-                    if (brinquedo) {
-                        return {
-                            ...brinquedo,
-                            quantidade: (eb as any).quantidade || 1,
-                            valorUnitario: brinquedo.valorUnitario || 0
-                        };
-                    }
-                    return null;
-                }).filter(Boolean) as SelectedBrinquedo[];
-                setSelectedBrinquedos(mappedBrinquedos);
-            }
+            // Se o backend retornar os objetos completos (ou parciais), vamos reconstruir o estado
+            const mappedBrinquedos = eventData.brinquedos.map(eb => {
+                const bId = (eb as any).brinquedoId || eb.id || (eb as any).brinquedo?.id;
+                // Encontra o brinquedo completo na lista global de brinquedos
+                const fullBrinquedo = brinquedos.find(b => b.id === bId);
+                if (fullBrinquedo) {
+                    return {
+                        ...fullBrinquedo,
+                        quantidade: (eb as any).quantidade || 1
+                    };
+                }
+                // Se não encontrar o objeto completo, usa o que tem (melhor que nada para o mapa/lista)
+                return {
+                    id: bId,
+                    nome: (eb as any).nome || "Brinquedo",
+                    quantidade: (eb as any).quantidade || 1,
+                    valorUnitario: (eb as any).valorUnitario || 0,
+                    necessita_funcionario: (eb as any).necessita_funcionario || false
+                } as any;
+            }).filter(Boolean);
+            setSelectedBrinquedos(mappedBrinquedos);
         } else {
             setSelectedBrinquedos([]);
         }
 
         if (eventData.funcionarios && eventData.funcionarios.length > 0) {
-             // Se o backend retornar os objetos completos
-            if (typeof eventData.funcionarios[0] === 'object' && 'nome' in eventData.funcionarios[0]) {
-                const uniqueFuncs = new Map();
-                eventData.funcionarios.forEach((f: any) => {
-                    if(!uniqueFuncs.has(f.id)) uniqueFuncs.set(f.id, f);
-                });
-                setSelectedFuncionarios(Array.from(uniqueFuncs.values()));
-            }
-            // Se retornar apenas IDs, precisamos encontrar
-            else if (funcionarios.length > 0) {
-                const uniqueIds = new Set();
-                const mappedFuncionarios = eventData.funcionarios.map(ef => {
-                    // Tenta extrair ID de várias formas possíveis (id direto, funcionarioId, ou objeto aninhado)
-                    let fId;
-                    if (typeof ef === 'number') fId = ef;
-                    else if ((ef as any).funcionarioId) fId = (ef as any).funcionarioId;
-                    else if ((ef as any).id) fId = (ef as any).id;
-                    else if ((ef as any).funcionario?.id) fId = (ef as any).funcionario.id;
-                    
-                    if (uniqueIds.has(fId)) return null;
-                    uniqueIds.add(fId);
-
-                    return funcionarios.find(f => f.id === fId);
-                }).filter(Boolean) as Funcionario[];
-                setSelectedFuncionarios(mappedFuncionarios);
-            }
+            const mappedFuncionarios = eventData.funcionarios.map(ef => {
+                const fId = typeof ef === 'number' ? ef : (ef.id || (ef as any).funcionarioId || (ef as any).funcionario?.id);
+                const fullFunc = funcionarios.find(f => f.id === fId);
+                return fullFunc || (typeof ef === 'object' ? ef : null);
+            }).filter(Boolean) as Funcionario[];
+            setSelectedFuncionarios(mappedFuncionarios);
         } else {
             setSelectedFuncionarios([]);
         }
@@ -359,9 +327,10 @@ export function EventoForm({ onSuccess, initialData, eventoId }: EventoFormProps
       return;
     }
 
-    // Constrói dataInicio e dataFim ISO Strings para o backend
-    const dataInicioISO = `${values.data}T${values.horaInicio}:00Z`; // Assumindo UTC por simplicidade, ou use date-fns para ajustar timezone
-    const dataFimISO = `${values.data}T${values.horaFim}:00Z`;
+    // Constrói dataInicio e dataFim ISO Strings respeitando o timezone local
+    // Ao omitir o 'Z', o construtor do Date interpreta como horário local do navegador
+    const dataInicioISO = new Date(`${values.data}T${values.horaInicio}:00`).toISOString();
+    const dataFimISO = new Date(`${values.data}T${values.horaFim}:00`).toISOString();
 
     // O backend espera { dataInicio, dataFim, brinquedos: [{brinquedoId, quantidade}], funcionarios: [id] }
     // O payload precisa ser transformado do formato do Form para o formato da API

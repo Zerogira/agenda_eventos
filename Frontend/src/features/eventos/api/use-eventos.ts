@@ -18,6 +18,11 @@ export const useEvento = (id?: string) => {
         valor: eventoData.valor || eventoData.valorTotal || 0,
         clienteId: eventoData.clienteId || eventoData.cliente?.id || 0,
         clienteNome: eventoData.cliente?.nome || eventoData.clienteNome,
+        endereco: eventoData.endereco,
+        numero: eventoData.numero,
+        bairro: eventoData.bairro,
+        cidade: eventoData.cidade,
+        estado: eventoData.estado,
       } as Evento;
     },
     enabled: !!id,
@@ -25,12 +30,20 @@ export const useEvento = (id?: string) => {
 };
 
 export const useEventos = () => {
+  const debugEventosApi = false;
   return useQuery({
     queryKey: ['eventos'],
     queryFn: async () => {
       const { data } = await api.get<any>('/eventos');
+      if (debugEventosApi) {
+        console.log('[useEventos][Debug] payload bruto /eventos:', data);
+      }
       
       const eventosList = data.success && Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+      if (debugEventosApi) {
+        console.log('[useEventos][Debug] primeiro evento bruto:', eventosList[0]);
+        console.log('[useEventos][Debug] chaves primeiro evento:', eventosList[0] ? Object.keys(eventosList[0]) : []);
+      }
 
       return eventosList.map((item: any) => ({
         ...item,
@@ -39,6 +52,11 @@ export const useEventos = () => {
         valor: item.valor || item.valorTotal || 0,
         clienteId: item.clienteId || item.cliente?.id || 0,
         clienteNome: item.cliente?.nome || item.clienteNome,
+        endereco: item.endereco,
+        numero: item.numero,
+        bairro: item.bairro,
+        cidade: item.cidade,
+        estado: item.estado,
         brinquedos: item.brinquedos || [],
         funcionarios: item.funcionarios || []
       })) as Evento[];
