@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import InputMask from "react-input-mask";
 import { clienteSchema, Cliente } from "../types";
 import { useCreateCliente, useUpdateCliente, useDeleteCliente } from "../api/use-clientes";
 import { Button } from "@/components/ui/button";
@@ -113,7 +114,16 @@ export function ClienteForm({ onSuccess, initialData }: ClienteFormProps) {
             <FormItem>
               <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="(00) 00000-0000" {...field} />
+                <InputMask
+                  mask="(99) 99999-9999"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                >
+                  {(inputProps: any) => (
+                    <Input placeholder="(00) 00000-0000" {...inputProps} />
+                  )}
+                </InputMask>
               </FormControl>
               <FormMessage />
             </FormItem>

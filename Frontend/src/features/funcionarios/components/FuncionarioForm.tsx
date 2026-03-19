@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import InputMask from "react-input-mask";
 import { funcionarioSchema, Funcionario } from "../types";
 import { useCreateFuncionario, useUpdateFuncionario, useDeleteFuncionario } from "../api/use-funcionarios";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,16 @@ export function FuncionarioForm({ onSuccess, initialData }: FuncionarioFormProps
             <FormItem>
               <FormLabel>CPF</FormLabel>
               <FormControl>
-                <Input placeholder="000.000.000-00" {...field} />
+                <InputMask
+                  mask="999.999.999-99"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                >
+                  {(inputProps: any) => (
+                    <Input placeholder="000.000.000-00" {...inputProps} />
+                  )}
+                </InputMask>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -115,7 +125,16 @@ export function FuncionarioForm({ onSuccess, initialData }: FuncionarioFormProps
             <FormItem>
               <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="(00) 00000-0000" {...field} />
+                <InputMask
+                  mask="(99) 99999-9999"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                >
+                  {(inputProps: any) => (
+                    <Input placeholder="(00) 00000-0000" {...inputProps} />
+                  )}
+                </InputMask>
               </FormControl>
               <FormMessage />
             </FormItem>
