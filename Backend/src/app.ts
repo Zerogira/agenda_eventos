@@ -16,6 +16,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Rota de saúde raiz
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Agenda Eventos API está online!',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV 
+  });
+});
+
 // Request logging middleware
 app.use(pinoHttp({
   logger,
@@ -38,6 +47,12 @@ app.use(pinoHttp({
 
 app.use('/api/auth', authRoutes);
 app.use('/api/clientes', clienteRoutes);
+
+// Rota de saúde da API
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/funcionarios', funcionarioRoutes);
 app.use('/api/brinquedos', brinquedoRoutes);
 app.use('/api/eventos', eventoRoutes);
