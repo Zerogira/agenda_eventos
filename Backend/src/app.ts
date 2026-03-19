@@ -10,7 +10,6 @@ import eventoRoutes from './routes/evento.routes';
 import adminRoutes from './routes/admin.routes';
 import auditRoutes from './routes/audit.routes';
 import { errorHandler } from './middlewares/error.middleware';
-import prisma from './prisma';
 
 const app = express();
 
@@ -52,29 +51,6 @@ app.use('/api/clientes', clienteRoutes);
 // Rota de saúde da API
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Rota TEMPORÁRIA de teste de banco (Remover após testar!)
-app.get('/api/test-db', async (req, res) => {
-  try {
-    const userCount = await prisma.usuario.count();
-    const empresaCount = await prisma.empresa.count();
-    res.json({ 
-      success: true, 
-      message: "Conexão com o banco ok!", 
-      dados: {
-        totalUsuarios: userCount,
-        totalEmpresas: empresaCount
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: "Falha ao conectar com o banco de dados",
-      error: (error as Error).message 
-    });
-  }
 });
 
 app.use('/api/funcionarios', funcionarioRoutes);

@@ -78,12 +78,14 @@ export function LoginForm() {
             </Link>
           </div>
 
-          {/* Development Hint */}
-          <div className="mt-6 p-4 text-xs text-muted-foreground bg-muted rounded-md">
-            <p className="font-semibold mb-1">Ambiente de Desenvolvimento:</p>
-            <p>Email: admin@admin.com</p>
-            <p>Senha: 123456</p>
-          </div>
+          {/* Development Hint - Only visible in development mode */}
+          {import.meta.env.DEV && (
+            <div className="mt-6 p-4 text-xs text-muted-foreground bg-muted rounded-md">
+              <p className="font-semibold mb-1">Ambiente de Desenvolvimento:</p>
+              <p>Email: admin@admin.com</p>
+              <p>Senha: 123456</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
