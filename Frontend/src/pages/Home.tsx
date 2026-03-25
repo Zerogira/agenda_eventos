@@ -7,47 +7,49 @@ import {
   BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { WeatherCard } from "@/features/dashboard/components/WeatherCard";
 import { StockStatusCard } from "@/features/dashboard/components/StockStatusCard";
 import { TodayEventsCard } from "@/features/dashboard/components/TodayEventsCard";
 import { AlertsCard } from "@/features/dashboard/components/AlertsCard";
 import { EventsMapCard } from "@/features/dashboard/components/EventsMapCard";
+import { OperationalInsight } from "@/features/dashboard/components/OperationalInsight";
 
 export function Home() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Painel Operacional</h2>
-          <p className="text-muted-foreground">Visão geral do dia e alertas do sistema</p>
+    <div className="space-y-6 max-w-[1600px] mx-auto pt-2">
+      {/* BLOCO 1: Resumo Superior (Alinhado com o grid principal) */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Lado Esquerdo: Clima + Estoque (Alinhado com TodayEventsCard) */}
+        <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="md:col-span-4 lg:col-span-3">
+              <WeatherCard />
+          </div>
+          <div className="md:col-span-8 lg:col-span-9">
+              <StockStatusCard />
+          </div>
         </div>
-      </div>
 
-      {/* Linha 1: Status Críticos e Clima */}
-      <div className="grid gap-6 md:grid-cols-12">
-        <div className="md:col-span-4 lg:col-span-3">
-            <WeatherCard />
-        </div>
-        <div className="md:col-span-8 lg:col-span-9">
-            <StockStatusCard />
-        </div>
-      </div>
-
-      {/* Linha 2: Eventos do Dia e Alertas */}
-      <div className="grid gap-6 md:grid-cols-12">
-        <div className="md:col-span-8 lg:col-span-8">
-            <TodayEventsCard />
-        </div>
-        <div className="md:col-span-4 lg:col-span-4">
+        {/* Lado Direito: Alertas (Alinhado com a coluna do Mapa) */}
+        <div className="w-full lg:w-[400px]">
             <AlertsCard />
         </div>
       </div>
 
-      {/* Linha 3: Mapa */}
-      <div className="grid gap-6 md:grid-cols-1">
-        <div className="h-[400px]">
-              <EventsMapCard />
+      {/* BLOCO 2 & 3: Foco do Dia e Mapa */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Foco do Dia (Principal) */}
+        <div className="flex-1 w-full lg:w-auto">
+            <TodayEventsCard />
+        </div>
+        
+        {/* Mapa (Sempre Visível) */}
+        <div className="w-full lg:w-[400px] flex flex-col gap-6 sticky top-6">
+            <EventsMapCard />
+            
+            {/* Insight do Dia (Dinamico) */}
+            <OperationalInsight />
         </div>
       </div>
     </div>

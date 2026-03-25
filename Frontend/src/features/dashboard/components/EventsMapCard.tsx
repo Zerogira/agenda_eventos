@@ -6,6 +6,7 @@ import { MapPin } from 'lucide-react';
 import L from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/lib/api';
+import { Link } from 'react-router-dom';
 
 // Fix for default marker icon
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -24,6 +25,7 @@ export function EventsMapCard() {
   const { data: eventos = [] } = useEventos();
   const [isMounted, setIsMounted] = useState(false);
   const [markers, setMarkers] = useState<any[]>([]);
+  const mapRef = useRef<L.Map | null>(null);
   const debugGeocoding = false;
   const loggedMissingAddressRef = useRef<Set<string>>(new Set());
   const eventDetailCacheRef = useRef<Map<string, any>>(new Map());
@@ -209,39 +211,80 @@ export function EventsMapCard() {
     }
   }, [todayEvents, isMounted, debugGeocoding]);
 
+  useEffect(() => {
+    if (isMounted && mapRef.current) {
+      // Invalidate size multiple times to handle layout shifts
+      const timer1 = setTimeout(() => mapRef.current?.invalidateSize(), 100);
+      const timer2 = setTimeout(() => mapRef.current?.invalidateSize(), 500);
+      const timer3 = setTimeout(() => mapRef.current?.invalidateSize(), 1000);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
+    }
+  }, [isMounted, markers]);
+
   if (!isMounted) return null;
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
-            Mapa de Eventos (Hoje)
+    <Card className="h-full border-slate-200 shadow-sm overflow-hidden flex flex-col bg-white border-t-4 border-t-indigo-600" style={{ height: '450px' }}>
+      <CardHeader className="pb-2 pt-3 px-4 border-b border-slate-50 shrink-0 bg-slate-50/30">
+        <CardTitle className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <MapPin className="h-3 w-3 text-slate-400" />
+          Mapa de Operações (Hoje)
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 flex-1 min-h-[300px] relative">
-        {markers.length === 0 ? (
-             <div className="flex items-center justify-center h-full text-muted-foreground bg-muted/10">
-                <p className="text-sm">Sem eventos com localização para hoje.</p>
-             </div>
+      <CardContent className="p-0 flex-1 relative min-h-0">
+        {markers.length === 0 && todayEvents.length > 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 z-[10]">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Carregando Mapa...</span>
+            </div>
+          </div>
+        ) : markers.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-slate-400 bg-slate-50/10">
+            <p className="text-xs font-medium uppercase tracking-tighter">Sem eventos com localização hoje</p>
+          </div>
         ) : (
-            <MapContainer center={defaultCenter} zoom={12} style={{ height: '100%', width: '100%', minHeight: '300px' }}>
+          <div className="h-full w-full">
+            <MapContainer 
+              center={defaultCenter} 
+              zoom={13} 
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={false}
+              ref={mapRef}
+            >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {markers.map(marker => (
-                <Marker key={marker.id} position={marker.position}>
+            {markers.map((marker) => (
+              <Marker 
+                key={marker.id} 
+                position={marker.position}
+              >
                 <Popup>
-                    <div className="text-sm">
-                        <strong className="block mb-1">{marker.title}</strong>
-                        <span className="block text-muted-foreground">{marker.time} - {marker.client}</span>
-                        <span className="block text-xs text-muted-foreground mt-1">{marker.address}</span>
+                  <div className="p-1">
+                    <h3 className="font-bold text-sm text-slate-900">{marker.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 font-medium">{marker.client}</p>
+                    <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase">{marker.time}</span>
+                      <Link 
+                         to={`/eventos?id=${marker.id}`} 
+                         className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-wider"
+                       >
+                         Ver Evento →
+                       </Link>
                     </div>
+                  </div>
                 </Popup>
-                </Marker>
+              </Marker>
             ))}
-            </MapContainer>
+          </MapContainer>
+          </div>
         )}
       </CardContent>
     </Card>

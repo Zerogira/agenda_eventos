@@ -47,7 +47,7 @@ import {
   differenceInDays
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Package, Users, DollarSign, Calendar as CalendarIcon, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Calendar, UserCheck } from "lucide-react";
+import { Package, Users, DollarSign, Calendar as CalendarIcon, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Calendar, UserCheck, Trophy, Star, Target, Clock, AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useClientes } from "@/features/clientes/api/use-clientes";
@@ -361,10 +361,6 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
           // Para mês ou semana, agrupar por dia
           const daysMap = new Map<string, { total: number, cancelled: number, date: Date }>();
           
-          // Usar filteredEvents para respeitar o range de data selecionado (Mês ou Semana)
-          // Mas precisamos ter cuidado com o filtro de status. Se o usuário filtrou status, isso aqui fica enviesado.
-          // O ideal seria usar "eventos" e filtrar pela data manualmente aqui.
-          
           let start, end;
           if (filterType === "week") {
               start = startOfWeek(currentDate, { locale: ptBR });
@@ -462,34 +458,50 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
     const clientsMap: Record<string, { name: string, total: number, count: number }> = {};
     const employeesMap: Record<string, { name: string, count: number }> = {};
 
-    filteredEvents.forEach(curr => {
+    // Use ALL events for rankings to ensure consistency, not just filtered ones
+    // or at least be very careful about the data source
+    eventos.forEach(curr => {
         if (curr.status !== 'CANCELADO') {
             // Client
-            const cId = curr.clienteId;
+            const cId = curr.clienteId.toString();
             const cName = curr.clienteNome || `Cliente ${cId}`;
-            if (!clientsMap[cId]) clientsMap[cId] = { name: cName, total: 0, count: 0 };
+            if (!clientsMap[cId]) {
+                clientsMap[cId] = { name: cName, total: 0, count: 0 };
+            }
             clientsMap[cId].total += (Number(curr.valor) || 0);
             clientsMap[cId].count += 1;
 
             // Employees
             curr.funcionarios?.forEach((f: any) => {
-                const fId = f.id || f.funcionarioId;
+                const fId = (f.id || f.funcionarioId || f.funcionario?.id || "unknown").toString();
                 const fName = f.nome || f.funcionario?.nome || "Funcionário";
-                if (!employeesMap[fId]) employeesMap[fId] = { name: fName, count: 0 };
-                employeesMap[fId].count += 1;
+                if (fId !== "unknown") {
+                    if (!employeesMap[fId]) {
+                        employeesMap[fId] = { name: fName, count: 0 };
+                    }
+                    employeesMap[fId].count += 1;
+                }
             });
         }
     });
 
-    const topClientsByRevenue = Object.values(clientsMap).sort((a, b) => b.total - a.total).slice(0, 5);
-    const topClientsByEvents = Object.values(clientsMap).sort((a, b) => b.count - a.count).slice(0, 5);
-    const topEmployees = Object.values(employeesMap).sort((a, b) => b.count - a.count).slice(0, 5);
+    const topClientsByRevenue = Object.values(clientsMap)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+
+    const topClientsByEvents = Object.values(clientsMap)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+    const topEmployees = Object.values(employeesMap)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
 
     // Toys Ranking (Reusing logic from rentalAnalysis for consistency)
     const topToys = rentalAnalysis.mostRented;
 
     return { topClientsByRevenue, topClientsByEvents, topEmployees, topToys };
-  }, [filteredEvents, rentalAnalysis]);
+  }, [eventos, rentalAnalysis]);
 
   const formatCurrency = (val: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -505,12 +517,11 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
   };
 
   const renderGrowthBadge = (value: number) => {
-      if (value === 0) return <Badge variant="outline" className="ml-2 text-xs">0%</Badge>;
+      if (value === 0) return <Badge variant="outline" className="ml-2 text-xs border-purple-100 text-purple-600">0%</Badge>;
       const isPositive = value > 0;
       return (
           <Badge 
-            variant={isPositive ? "default" : "destructive"} 
-            className={`ml-2 text-xs ${isPositive ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+            className={`ml-2 text-xs border-none shadow-none ${isPositive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
           >
               {isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
               {Math.abs(value).toFixed(1)}%
@@ -520,76 +531,81 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
 
   // Helper for Heatmap Color
   const getHeatmapColor = (receita: number, maxReceita: number) => {
-      if (receita === 0) return "bg-gray-100";
+      if (receita === 0) return "bg-gray-50";
       const ratio = receita / (maxReceita || 1);
-      if (ratio < 0.25) return "bg-green-200";
-      if (ratio < 0.5) return "bg-green-300";
-      if (ratio < 0.75) return "bg-green-400";
-      return "bg-green-600";
+      if (ratio < 0.25) return "bg-purple-100 text-purple-700";
+      if (ratio < 0.5) return "bg-purple-200 text-purple-800";
+      if (ratio < 0.75) return "bg-purple-400 text-white";
+      return "bg-purple-600 text-white";
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
-      {/* LINHA 1: CABEÇALHO E FILTROS */}
-      <div className="flex flex-col gap-4 bg-white p-4 rounded-lg border shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* LINHA 1: FILTROS E NAVEGAÇÃO */}
+      <div className="flex flex-col gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             
-            {/* Título e Navegação Temporal */}
-            <div className="flex items-center gap-4">
-                <h3 className="text-xl font-semibold flex items-center gap-2 min-w-[200px]">
-                    {filterType === 'month' && (
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 mr-1"
-                            onClick={() => setFilterType('year')}
-                            title="Voltar para Visão Anual"
-                        >
-                            <Calendar className="h-4 w-4" />
-                        </Button>
-                    )}
-                    Painel Analítico
-                </h3>
-
-                <div className="flex items-center bg-secondary/20 rounded-md border p-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevious}>
+            {/* Navegação Temporal */}
+            <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center bg-white rounded-lg border border-slate-200 shadow-sm p-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:bg-slate-50 hover:text-purple-600" onClick={handlePrevious}>
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
                     
-                    <span className="min-w-[140px] text-center font-medium text-sm capitalize px-2">
+                    <span className="min-w-[150px] text-center font-bold text-sm text-slate-700 capitalize px-3">
                         {periodLabel}
                     </span>
                     
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNext}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:bg-slate-50 hover:text-purple-600" onClick={handleNext}>
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
 
-                <Button variant="outline" size="sm" onClick={handleToday} className="ml-2">
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleToday} 
+                    className="border-slate-200 text-slate-600 hover:bg-slate-100 font-bold"
+                >
                     Hoje
                 </Button>
+
+                {filterType === 'month' && (
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-purple-600 hover:bg-purple-50 font-bold flex items-center gap-2"
+                        onClick={() => setFilterType('year')}
+                    >
+                        <Calendar className="h-4 w-4" />
+                        Ver Ano
+                    </Button>
+                )}
             </div>
             
             {/* Seletor de Tipo de Visualização */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Visualização:</span>
                 <Select value={filterType} onValueChange={(val: any) => setFilterType(val)}>
-                    <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[160px] bg-white border-slate-200 text-slate-700 font-bold shadow-sm">
+                        <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="year">Visão Anual</SelectItem>
-                        <SelectItem value="month">Visão Mensal</SelectItem>
-                        <SelectItem value="week">Visão Semanal</SelectItem>
+                        <SelectItem value="year">Anual</SelectItem>
+                        <SelectItem value="month">Mensal</SelectItem>
+                        <SelectItem value="week">Semanal</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
         </div>
 
         {/* Filtros Avançados */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t">
-            <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-medium">Status</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectTrigger className="h-9 bg-white border-slate-200 text-slate-700 shadow-sm font-medium"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="AGENDADO">Agendado</SelectItem>
@@ -598,30 +614,30 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-medium">Cliente</label>
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cliente</label>
                 <Select value={filterCliente} onValueChange={setFilterCliente}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectTrigger className="h-9 bg-white border-slate-200 text-slate-700 shadow-sm font-medium"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
                         {clientes.map(c => <SelectItem key={c.id} value={c.id?.toString() || ""}>{c.nome}</SelectItem>)}
                     </SelectContent>
                 </Select>
             </div>
-            <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-medium">Funcionário</label>
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Equipe</label>
                 <Select value={filterFuncionario} onValueChange={setFilterFuncionario}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectTrigger className="h-9 bg-white border-slate-200 text-slate-700 shadow-sm font-medium"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
                         {funcionarios.map(f => <SelectItem key={f.id} value={f.id?.toString() || ""}>{f.nome}</SelectItem>)}
                     </SelectContent>
                 </Select>
             </div>
-            <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-medium">Brinquedo</label>
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brinquedo</label>
                 <Select value={filterBrinquedo} onValueChange={setFilterBrinquedo}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectTrigger className="h-9 bg-white border-slate-200 text-slate-700 shadow-sm font-medium"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
                         {brinquedos.map(b => <SelectItem key={b.id} value={b.id?.toString() || ""}>{b.nome}</SelectItem>)}
@@ -632,179 +648,130 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="temporal">Análise Temporal</TabsTrigger>
-            <TabsTrigger value="assets">Locação / Ativos</TabsTrigger>
-            <TabsTrigger value="rankings">Rankings</TabsTrigger>
+        <TabsList className="bg-slate-100 p-1 border border-slate-200">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 px-6 font-bold">Resumo Financeiro</TabsTrigger>
+            <TabsTrigger value="temporal" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 px-6 font-bold">Tendências</TabsTrigger>
+            <TabsTrigger value="assets" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 px-6 font-bold">Performance de Itens</TabsTrigger>
+            <TabsTrigger value="rankings" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 px-6 font-bold">Rankings</TabsTrigger>
         </TabsList>
 
         {/* --- ABA 1: VISÃO GERAL --- */}
-        <TabsContent value="overview" className="space-y-6">
-            {/* KPIs */}
+        <TabsContent value="overview" className="space-y-6 outline-none">
+            {/* KPIs Secundários do Dashboard */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
+                <Card className="bg-white border-slate-100 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ticket Médio</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(kpiData.receitaTotal)}</div>
-                    <div className="flex items-center mt-1">
-                        <span className="text-xs text-muted-foreground">vs anterior</span>
-                        {renderGrowthBadge(kpiData.receitaGrowth)}
+                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(kpiData.ticketMedio)}</div>
+                    <p className="text-xs font-medium text-slate-500 mt-2 italic">Média por contrato</p>
+                </CardContent>
+                </Card>
+
+                <Card className="bg-white border-slate-100 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Ativa</CardTitle>
+                    <Users className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-slate-900">{kpiData.clientesUnicos}</div>
+                    <p className="text-xs font-medium text-slate-500 mt-2 italic">Clientes no período</p>
+                </CardContent>
+                </Card>
+
+                <Card className="bg-white border-slate-100 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens / Evento</CardTitle>
+                    <Package className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-slate-900">{rentalAnalysis.mediaBrinquedosPorEvento.toFixed(1)}</div>
+                    <p className="text-xs font-medium text-slate-500 mt-2 italic">Média de alocação</p>
+                </CardContent>
+                </Card>
+
+                <Card className="bg-white border-slate-100 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crescimento</CardTitle>
+                    <div className="h-4 w-4 flex items-center justify-center">
+                        {kpiData.receitaGrowth >= 0 ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-rose-500" />}
                     </div>
-                </CardContent>
-                </Card>
-                <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Eventos</CardTitle>
-                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{kpiData.totalEventos}</div>
-                    <div className="flex items-center mt-1">
-                        <span className="text-xs text-muted-foreground">vs anterior</span>
-                        {renderGrowthBadge(kpiData.eventosGrowth)}
+                    <div className={`text-2xl font-bold ${kpiData.receitaGrowth >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {kpiData.receitaGrowth.toFixed(1)}%
                     </div>
-                </CardContent>
-                </Card>
-                <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(kpiData.ticketMedio)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Por evento realizado</p>
-                </CardContent>
-                </Card>
-                <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Média Brinquedos</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{rentalAnalysis.mediaBrinquedosPorEvento.toFixed(1)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Itens por evento</p>
+                    <p className="text-xs font-medium text-slate-500 mt-2 italic">Comparado ao anterior</p>
                 </CardContent>
                 </Card>
             </div>
 
             {/* Gráfico Principal */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="col-span-1 lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Evolução de Desempenho</CardTitle>
-                        <CardDescription>Receita e Eventos por {filterType === 'year' ? 'Mês' : 'Dia'}</CardDescription>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 border-slate-100 shadow-sm bg-white">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-slate-900 text-lg font-bold">Curva de Performance</CardTitle>
+                            <CardDescription>Receita (Roxo) vs Eventos (Amarelo)</CardDescription>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[300px]">
+                        <div className="h-[350px] w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart 
                                 data={timeData}
                                 onClick={handleBarClick}
                                 style={{ cursor: filterType === 'year' ? 'pointer' : 'default' }}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                             >
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                            <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                            <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} />
-                            <Tooltip 
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                formatter={(value: number, name: string) => [name === 'Receita' ? formatCurrency(value) : value, name]} 
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis 
+                                dataKey="name" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
                             />
-                            <Legend />
-                            <Bar yAxisId="left" dataKey="receita" name="Receita" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                            <Line yAxisId="right" type="monotone" dataKey="eventos" name="Eventos" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} />
+                            <YAxis 
+                                yAxisId="left" 
+                                orientation="left" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#64748b', fontSize: 11 }}
+                                tickFormatter={(val) => `R$${val >= 1000 ? (val/1000).toFixed(1) + 'k' : val}`} 
+                            />
+                            <YAxis yAxisId="right" orientation="right" hide />
+                            <Tooltip 
+                                cursor={{ fill: '#f8fafc' }}
+                                contentStyle={{ 
+                                    borderRadius: '12px', 
+                                    border: '1px solid #e2e8f0', 
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    padding: '12px'
+                                }}
+                                itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
+                                formatter={(value: number, name: string) => [
+                                    name === 'Receita' ? formatCurrency(value) : value, 
+                                    name
+                                ]} 
+                            />
+                            <Bar yAxisId="left" dataKey="receita" name="Receita" fill="#7c3aed" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                            <Line yAxisId="right" type="monotone" dataKey="eventos" name="Eventos" stroke="#eab308" strokeWidth={4} dot={{ r: 4, fill: '#eab308', strokeWidth: 2, stroke: '#fff' }} />
                             </BarChart>
                         </ResponsiveContainer>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Receita Acumulada */}
-                <Card className="col-span-1 lg:col-span-2">
+                {/* Status Pizza */}
+                <Card className="border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Receita Acumulada no Período</CardTitle>
-                        <CardDescription>Crescimento do faturamento ao longo do tempo</CardDescription>
+                        <CardTitle className="text-slate-900 text-lg font-bold">Distribuição Operacional</CardTitle>
+                        <CardDescription>Status dos eventos no período</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={timeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorAcumulado" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="name" />
-                                <YAxis tickFormatter={(val) => `R$${val/1000}k`} />
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                                <Area type="monotone" dataKey="acumulado" stroke="#10b981" fillOpacity={1} fill="url(#colorAcumulado)" name="Acumulado" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </TabsContent>
-
-        {/* --- ABA 2: ANÁLISE TEMPORAL --- */}
-        <TabsContent value="temporal" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Demanda Semanal */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Demanda por Dia da Semana</CardTitle>
-                        <CardDescription>Concentração de eventos</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={eventsByDayOfWeek}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Eventos" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Horários Mais Comuns */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Horários Mais Comuns</CardTitle>
-                        <CardDescription>Início dos eventos</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={hoursDistribution}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Eventos" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Status dos Eventos */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Status dos Eventos</CardTitle>
-                        <CardDescription>Visão geral da operação</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[300px]">
+                    <CardContent className="flex flex-col items-center justify-center pt-4">
+                        <div className="h-[240px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -812,40 +779,86 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}
-                                        outerRadius={80}
+                                        outerRadius={85}
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
                                         {statusData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={
-                                                entry.name === 'CONCLUIDO' ? '#10b981' : 
-                                                entry.name === 'CANCELADO' ? '#ef4444' : '#3b82f6'
-                                            } />
+                                            <Cell 
+                                                key={`cell-${index}`} 
+                                                fill={[
+                                                    '#7c3aed', // CONCLUIDO (Purple)
+                                                    '#eab308', // AGENDADO (Yellow)
+                                                    '#f43f5e', // CANCELADO (Rose)
+                                                    '#3b82f6', // OUTROS (Blue)
+                                                    '#10b981'  // OUTROS (Emerald)
+                                                ][index % 5]} 
+                                                stroke="none"
+                                            />
                                         ))}
                                     </Pie>
-                                    <Tooltip />
-                                    <Legend verticalAlign="bottom" height={36}/>
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                    />
                                 </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 w-full mt-6 px-2">
+                            {statusData.map((s, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: ['#7c3aed', '#eab308', '#f43f5e', '#3b82f6', '#10b981'][i % 5] }}></div>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter truncate">{s.name}</span>
+                                    <span className="text-xs font-black text-slate-700 ml-auto">{s.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </TabsContent>
+
+        {/* --- ABA 2: ANÁLISE TEMPORAL --- */}
+        <TabsContent value="temporal" className="space-y-6 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Demanda Semanal */}
+                <Card className="border-slate-100 shadow-sm bg-white">
+                    <CardHeader>
+                        <CardTitle className="text-slate-900 font-bold flex items-center gap-2">
+                            <Target className="h-5 w-5 text-purple-600" />
+                            Concentração por Dia
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={eventsByDayOfWeek}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontWeight: 600}} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} />
+                                    <Bar dataKey="value" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Eventos" maxBarSize={40} />
+                                </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Antecedência de Reserva */}
-                <Card>
+                {/* Horários Mais Comuns */}
+                <Card className="border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Antecedência de Reserva</CardTitle>
-                        <CardDescription>Planejamento dos clientes</CardDescription>
+                        <CardTitle className="text-slate-900 font-bold flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-blue-500" />
+                            Janelas de Início
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={leadTimeDistribution} layout="vertical" margin={{ left: 40 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                    <XAxis type="number" hide />
-                                    <YAxis type="category" dataKey="name" width={80} tick={{fontSize: 12}} />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#0ea5e9" radius={[0, 4, 4, 0]} name="Eventos" barSize={30} />
+                                <BarChart data={hoursDistribution}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontWeight: 600}} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} />
+                                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Eventos" maxBarSize={40} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -853,10 +866,12 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
                 </Card>
 
                 {/* Taxa de Cancelamento */}
-                <Card className="col-span-1 lg:col-span-2">
+                <Card className="col-span-1 lg:col-span-2 border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Taxa de Cancelamento</CardTitle>
-                        <CardDescription>Percentual de eventos cancelados por período</CardDescription>
+                        <CardTitle className="text-slate-900 font-bold flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-rose-500" />
+                            Índice de Cancelamento
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[250px]">
@@ -864,15 +879,15 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
                                 <AreaChart data={cancellationsOverTime}>
                                     <defs>
                                         <linearGradient id="colorCancel" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1}/>
+                                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                                         </linearGradient>
                                     </defs>
-                                    <XAxis dataKey="name" />
-                                    <YAxis tickFormatter={(val) => `${val.toFixed(0)}%`} />
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontWeight: 600}} />
+                                    <YAxis tickFormatter={(val) => `${val.toFixed(0)}%`} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                     <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                    <Area type="monotone" dataKey="rate" stroke="#ef4444" fillOpacity={1} fill="url(#colorCancel)" name="Taxa Cancelamento" />
+                                    <Area type="monotone" dataKey="rate" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorCancel)" name="Taxa Cancelamento" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -881,34 +896,31 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
 
                 {/* Heatmap (Apenas Mensal) */}
                 {filterType === 'month' && heatmapData && (
-                    <Card className="col-span-1 lg:col-span-2">
+                    <Card className="col-span-1 lg:col-span-2 border-slate-100 shadow-sm bg-white">
                         <CardHeader>
-                            <CardTitle>Calendário de Faturamento</CardTitle>
-                            <CardDescription>Intensidade de receita por dia do mês</CardDescription>
+                            <CardTitle className="text-slate-900 font-bold">Fluxo de Caixa Diário</CardTitle>
+                            <CardDescription>Intensidade de faturamento ao longo do mês</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-7 gap-2">
                                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                                    <div key={d} className="text-center text-xs font-bold text-muted-foreground py-2">{d}</div>
+                                    <div key={d} className="text-center text-[10px] font-black text-slate-400 uppercase py-2 tracking-widest">{d}</div>
                                 ))}
                                 {(() => {
-                                    // Preenchimento dos dias vazios antes do dia 1
                                     const firstDayOfMonth = startOfMonth(currentDate).getDay();
                                     const blanks = Array(firstDayOfMonth).fill(null);
-                                    
-                                    // Max Receita para escala de cor
                                     const maxRev = Math.max(...heatmapData.map(d => d.receita));
 
                                     return [
-                                        ...blanks.map((_, i) => <div key={`blank-${i}`} className="h-12 bg-transparent" />),
+                                        ...blanks.map((_, i) => <div key={`blank-${i}`} className="h-14 bg-transparent" />),
                                         ...heatmapData.map(d => (
                                             <div 
                                                 key={d.day} 
-                                                className={`h-12 rounded-md border flex flex-col items-center justify-center text-xs transition-all hover:scale-105 ${getHeatmapColor(d.receita, maxRev)}`}
+                                                className={`h-14 rounded-lg border border-slate-50 flex flex-col items-center justify-center text-xs transition-all hover:ring-2 hover:ring-purple-200 ${getHeatmapColor(d.receita, maxRev)}`}
                                                 title={`Dia ${d.day}: ${formatCurrency(d.receita)} (${d.eventos} eventos)`}
                                             >
-                                                <span className="font-bold opacity-70">{d.day}</span>
-                                                {d.receita > 0 && <span className="font-semibold text-[10px] text-white hidden md:block">R${Math.round(d.receita/1000)}k</span>}
+                                                <span className="font-bold opacity-40 text-[9px]">${d.day}</span>
+                                                {d.receita > 0 && <span className="font-black text-[10px] mt-1">R$${Math.round(d.receita/1000)}k</span>}
                                             </div>
                                         ))
                                     ];
@@ -920,71 +932,84 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
             </div>
         </TabsContent>
 
-        {/* --- ABA 3: LOCAÇÃO / ATIVOS --- */}
-        <TabsContent value="assets" className="space-y-6">
+        {/* --- ABA 3: PERFORMANCE DE ITENS --- */}
+        <TabsContent value="assets" className="space-y-6 outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="col-span-1 lg:col-span-2">
+                <Card className="col-span-1 lg:col-span-2 border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Top Receita por Ativo</CardTitle>
-                        <CardDescription>Brinquedos que geram maior retorno financeiro</CardDescription>
+                        <CardTitle className="text-slate-900 font-bold">Rentabilidade por Ativo</CardTitle>
+                        <CardDescription>Faturamento acumulado (R$)</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[300px]">
+                        <div className="h-[350px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={revenueByToy} layout="vertical" margin={{ left: 100 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <BarChart data={revenueByToy} layout="vertical" margin={{ left: 40, right: 40 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                                     <XAxis type="number" hide />
-                                    <YAxis type="category" dataKey="name" width={150} tick={{fontSize: 12}} />
-                                    <Tooltip formatter={(val: number) => formatCurrency(val)} />
-                                    <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} name="Receita Estimada" />
+                                    <YAxis type="category" dataKey="name" width={150} tick={{fontSize: 12, fill: '#64748b', fontWeight: 600}} axisLine={false} tickLine={false} />
+                                    <Tooltip formatter={(val: number) => formatCurrency(val)} cursor={{fill: '#f8fafc'}} />
+                                    <Bar dataKey="value" fill="#7c3aed" radius={[0, 6, 6, 0]} name="Receita" barSize={30} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Mais Alugados (Volume)</CardTitle>
+                <Card className="border-slate-100 shadow-sm bg-white">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-slate-900 font-bold">Mais Requisitados</CardTitle>
+                            <CardDescription>Top 5 em volume de locação</CardDescription>
+                        </div>
+                        <Package className="h-5 w-5 text-blue-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {rentalAnalysis.mostRented.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-2 border-b last:border-0">
-                                    <div className="flex items-center gap-3">
-                                        <Badge variant="outline" className="w-6 h-6 flex justify-center items-center rounded-full p-0">
+                        <div className="space-y-3">
+                            {rentalAnalysis.mostRented.length > 0 ? rentalAnalysis.mostRented.map((item, i) => (
+                                <div key={i} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${i === 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100'}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-7 h-7 flex justify-center items-center rounded-full text-xs font-black ${i === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-white border border-slate-200 text-slate-400'}`}>
                                             {i + 1}
-                                        </Badge>
-                                        <span className="font-medium text-sm">{item.name}</span>
+                                        </div>
+                                        <span className={`font-bold text-sm ${i === 0 ? 'text-yellow-900' : 'text-slate-700'}`}>{item.name}</span>
                                     </div>
                                     <div className="text-right">
-                                        <span className="font-bold">{item.count}</span> <span className="text-xs text-muted-foreground">locações</span>
+                                        <span className={`font-black ${i === 0 ? 'text-yellow-700' : 'text-slate-900'}`}>{item.count}</span> 
+                                        <span className="text-[9px] font-black text-slate-400 uppercase ml-1 tracking-tighter">Locações</span>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="h-40 flex items-center justify-center text-slate-400 italic text-sm">Nenhum dado disponível</div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Maior Retorno (Top 5)</CardTitle>
+                <Card className="border-slate-100 shadow-sm bg-white">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-slate-900 font-bold">Top Rentabilidade</CardTitle>
+                            <CardDescription>Top 5 em faturamento</CardDescription>
+                        </div>
+                        <DollarSign className="h-5 w-5 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {rentalAnalysis.mostRevenue.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-2 border-b last:border-0">
-                                    <div className="flex items-center gap-3">
-                                        <Badge variant="outline" className="w-6 h-6 flex justify-center items-center rounded-full p-0 bg-green-50 text-green-700 border-green-200">
+                        <div className="space-y-3">
+                            {rentalAnalysis.mostRevenue.length > 0 ? rentalAnalysis.mostRevenue.map((item, i) => (
+                                <div key={i} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${i === 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100'}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-7 h-7 flex justify-center items-center rounded-full text-xs font-black ${i === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-white border border-slate-200 text-slate-400'}`}>
                                             {i + 1}
-                                        </Badge>
-                                        <span className="font-medium text-sm">{item.name}</span>
+                                        </div>
+                                        <span className={`font-bold text-sm ${i === 0 ? 'text-yellow-900' : 'text-slate-700'}`}>{item.name}</span>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="font-bold text-green-700">{formatCurrency(item.revenue)}</span>
+                                    <div className={`text-right font-mono font-black text-sm ${i === 0 ? 'text-yellow-700' : 'text-slate-900'}`}>
+                                        {formatCurrency(item.revenue)}
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="h-40 flex items-center justify-center text-slate-400 italic text-sm">Nenhum dado disponível</div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -992,118 +1017,90 @@ export function DashboardCharts({ eventos }: DashboardChartsProps) {
         </TabsContent>
 
         {/* --- ABA 4: RANKINGS --- */}
-        <TabsContent value="rankings" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+        <TabsContent value="rankings" className="space-y-6 outline-none">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* VIP Clientes */}
+                <Card className="border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Top Clientes (Receita)</CardTitle>
-                        <CardDescription>Quem mais investiu no período</CardDescription>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Trophy className="h-4 w-4 text-purple-600" />
+                            <CardTitle className="text-lg font-bold text-slate-900">VIPs (Faturamento)</CardTitle>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {rankings.topClientsByRevenue.map((cliente, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                        <div className="space-y-3">
+                            {rankings.topClientsByRevenue.length > 0 ? rankings.topClientsByRevenue.map((item, i) => (
+                                <div key={i} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${i === 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-slate-100 shadow-sm'}`}>
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-xs">
-                                            {i + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-semibold">{cliente.name}</p>
-                                            <p className="text-xs text-muted-foreground">{cliente.count} eventos</p>
-                                        </div>
+                                        <span className={`text-[10px] font-black ${i === 0 ? 'text-yellow-600' : 'text-slate-300'}`}>#0{i+1}</span>
+                                        <span className={`font-bold text-sm truncate max-w-[120px] ${i === 0 ? 'text-yellow-900' : 'text-slate-700'}`}>{item.name}</span>
                                     </div>
-                                    <div className="font-bold text-blue-700">
-                                        {formatCurrency(cliente.total)}
-                                    </div>
+                                    <span className={`font-mono font-bold text-xs ${i === 0 ? 'text-yellow-700' : 'text-slate-900'}`}>{formatCurrency(item.total)}</span>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="h-40 flex items-center justify-center text-slate-400 italic text-sm">Sem dados</div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                {/* Recorrência Clientes */}
+                <Card className="border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Clientes Fiéis (Frequência)</CardTitle>
-                        <CardDescription>Quem mais contratou eventos</CardDescription>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Star className="h-4 w-4 text-blue-500" />
+                            <CardTitle className="text-lg font-bold text-slate-900">Fidelidade (Volume)</CardTitle>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {rankings.topClientsByEvents.map((cliente, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                        <div className="space-y-3">
+                            {rankings.topClientsByEvents.length > 0 ? rankings.topClientsByEvents.map((item, i) => (
+                                <div key={i} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${i === 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-slate-100 shadow-sm'}`}>
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-700 font-bold text-xs">
-                                            {i + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-semibold">{cliente.name}</p>
-                                            <p className="text-xs text-muted-foreground">Ticket Médio: {formatCurrency(cliente.total/cliente.count)}</p>
-                                        </div>
+                                        <span className={`text-[10px] font-black ${i === 0 ? 'text-yellow-600' : 'text-slate-300'}`}>#0{i+1}</span>
+                                        <span className={`font-bold text-sm truncate max-w-[120px] ${i === 0 ? 'text-yellow-900' : 'text-slate-700'}`}>{item.name}</span>
                                     </div>
-                                    <div className="font-bold text-purple-700">
-                                        {cliente.count} <span className="text-xs font-normal">eventos</span>
-                                    </div>
+                                    <Badge className={`${i === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-slate-100 text-slate-600'} border-none shadow-none text-[10px] font-black`}>
+                                        {item.count} Eventos
+                                    </Badge>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="h-40 flex items-center justify-center text-slate-400 italic text-sm">Sem dados</div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                {/* Operação Ranking */}
+                <Card className="border-slate-100 shadow-sm bg-white">
                     <CardHeader>
-                        <CardTitle>Top Funcionários</CardTitle>
-                        <CardDescription>Participação em eventos</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {rankings.topEmployees.map((func, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-700 font-bold text-xs">
-                                            {i + 1}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <UserCheck className="h-4 w-4 text-muted-foreground" />
-                                            <p className="text-sm font-semibold">{func.name}</p>
-                                        </div>
-                                    </div>
-                                    <div className="font-bold text-orange-700">
-                                        {func.count} <span className="text-xs font-normal">eventos</span>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="flex items-center gap-2 mb-1">
+                            <UserCheck className="h-4 w-4 text-orange-500" />
+                            <CardTitle className="text-lg font-bold text-slate-900">Engajamento Equipe</CardTitle>
                         </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Top Brinquedos</CardTitle>
-                        <CardDescription>Líderes de locação</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {rankings.topToys.map((toy, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                        <div className="space-y-3">
+                            {rankings.topEmployees.length > 0 ? rankings.topEmployees.map((item, i) => (
+                                <div key={i} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${i === 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-slate-100 shadow-sm'}`}>
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs">
-                                            {i + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-semibold">{toy.name}</p>
-                                        </div>
+                                        <span className={`text-[10px] font-black ${i === 0 ? 'text-yellow-600' : 'text-slate-300'}`}>#0{i+1}</span>
+                                        <span className={`font-bold text-sm truncate max-w-[120px] ${i === 0 ? 'text-yellow-900' : 'text-slate-700'}`}>{item.name}</span>
                                     </div>
-                                    <div className="font-bold text-emerald-700">
-                                        {toy.count} <span className="text-xs font-normal">locações</span>
-                                    </div>
+                                    <Badge className={`${i === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-slate-100 text-slate-600'} border-none shadow-none text-[10px] font-black`}>
+                                        {item.count} Missões
+                                    </Badge>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="h-40 flex items-center justify-center text-slate-400 italic text-sm">Sem dados</div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
             </div>
         </TabsContent>
       </Tabs>
-
     </div>
   );
 }

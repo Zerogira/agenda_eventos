@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import InputMask from "react-input-mask";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function CompaniesPage() {
   const { data: empresas, isLoading } = useEmpresas();
@@ -112,45 +114,55 @@ export function CompaniesPage() {
     toast.success("Código copiado!");
   };
 
-  if (isLoading) return <div>Carregando...</div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-[400px]">
+      <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold">Gerenciar Empresas</h3>
+        <div className="flex flex-col gap-0.5">
+          <h3 className="text-xl font-black text-slate-900">Gerenciar Empresas</h3>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Listagem e controle de organizações ativas</p>
+        </div>
         <Dialog open={openCreate} onOpenChange={setOpenCreate}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Nova Empresa
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest px-6 shadow-lg shadow-indigo-100">
+              <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Nova Empresa
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Criar Nova Empresa</DialogTitle>
+              <DialogTitle className="text-xl font-black tracking-tight">Criar Nova Empresa</DialogTitle>
+              <DialogDescription className="font-medium text-slate-500">Cadastre uma nova organização e gere um convite automático.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <form onSubmit={handleCreate} className="space-y-6 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="create-nome">Nome da Empresa</Label>
+                <Label htmlFor="create-nome" className="text-xs font-black uppercase text-slate-500">Nome da Empresa</Label>
                 <Input
                   id="create-nome"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   required
+                  placeholder="Ex: Eventos Ltda"
+                  className="font-bold border-slate-200 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="create-cnpj">CNPJ (Opcional)</Label>
+                <Label htmlFor="create-cnpj" className="text-xs font-black uppercase text-slate-500">CNPJ (Opcional)</Label>
                 <InputMask
                   mask="99.999.999/9999-99"
                   value={cnpj}
                   onChange={(e) => setCnpj(e.target.value)}
                 >
                   {(inputProps: any) => (
-                    <Input id="create-cnpj" placeholder="00.000.000/0000-00" {...inputProps} />
+                    <Input id="create-cnpj" placeholder="00.000.000/0000-00" className="font-bold border-slate-200 focus:border-indigo-500" {...inputProps} />
                   )}
                 </InputMask>
               </div>
-              <Button type="submit" className="w-full" disabled={isCreating}>
+              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-xs tracking-widest h-11" disabled={isCreating}>
                 {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Empresa"}
               </Button>
             </form>
@@ -158,54 +170,68 @@ export function CompaniesPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-indigo-600">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>CNPJ</TableHead>
-              <TableHead>Criada em</TableHead>
-              <TableHead className="text-center">Usuários</TableHead>
-              <TableHead className="text-center">Eventos</TableHead>
-              <TableHead>Convite Ativo</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+          <TableHeader className="bg-slate-50/50">
+            <TableRow className="hover:bg-transparent border-slate-100">
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Nome</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">CNPJ</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4 text-center">Usuários</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4 text-center">Eventos</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Convite Ativo</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {empresas?.map((empresa) => (
-              <TableRow key={empresa.id}>
-                <TableCell className="font-medium">{empresa.nome}</TableCell>
-                <TableCell>{empresa.cnpj || "-"}</TableCell>
-                <TableCell>{format(new Date(empresa.createdAt), "dd/MM/yy", { locale: ptBR })}</TableCell>
-                <TableCell className="text-center">{empresa._count?.usuarios || 0}</TableCell>
-                <TableCell className="text-center">{empresa._count?.eventos || 0}</TableCell>
-                <TableCell>
-                    {empresa.convites && empresa.convites.length > 0 ? (
-                        <div className="flex items-center gap-2">
-                            <code className="bg-muted px-2 py-1 rounded text-xs">{empresa.convites[0].codigo}</code>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(empresa.convites![0].codigo)}>
-                                <Copy className="h-3 w-3" />
-                            </Button>
-                        </div>
+            {empresas?.map((empresa, idx) => {
+              const hasUsers = (empresa._count?.usuarios || 0) > 0;
+
+              return (
+                <TableRow key={empresa.id} className={cn("hover:bg-slate-50/50 border-slate-100 transition-colors", idx % 2 === 0 ? "bg-white" : "bg-slate-50/20")}>
+                  <TableCell className="font-bold text-slate-900 py-4">{empresa.nome}</TableCell>
+                  <TableCell className="text-slate-500 font-medium">{empresa.cnpj || "-"}</TableCell>
+                  <TableCell>
+                    {!hasUsers ? (
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-black uppercase px-2">Sem Usuários</Badge>
                     ) : (
-                        <span className="text-muted-foreground text-xs">Nenhum ativo</span>
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-black uppercase px-2">Ativa</Badge>
                     )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => openEditModal(empresa)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => openDeleteModal(empresa)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="font-bold text-slate-700">{empresa._count?.usuarios || 0}</span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="font-bold text-slate-700">{empresa._count?.eventos || 0}</span>
+                  </TableCell>
+                  <TableCell>
+                      {empresa.convites && empresa.convites.length > 0 ? (
+                          <div className="flex items-center gap-2">
+                              <code className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-black border border-indigo-100">{empresa.convites[0].codigo}</code>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50" onClick={() => copyToClipboard(empresa.convites![0].codigo)}>
+                                  <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                          </div>
+                      ) : (
+                          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter italic">Nenhum ativo</span>
+                      )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600" onClick={() => openEditModal(empresa)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-300 hover:text-red-500 hover:bg-red-50" onClick={() => openDeleteModal(empresa)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {empresas?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center h-24 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
                   Nenhuma empresa cadastrada.
                 </TableCell>
               </TableRow>
@@ -218,33 +244,34 @@ export function CompaniesPage() {
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Empresa</DialogTitle>
+            <DialogTitle className="text-xl font-black tracking-tight">Editar Empresa</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEdit} className="space-y-4">
+          <form onSubmit={handleEdit} className="space-y-6 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-nome">Nome da Empresa</Label>
+              <Label htmlFor="edit-nome" className="text-xs font-black uppercase text-slate-500">Nome da Empresa</Label>
               <Input
                 id="edit-nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
+                className="font-bold border-slate-200 focus:border-indigo-500"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-cnpj">CNPJ (Opcional)</Label>
+              <Label htmlFor="edit-cnpj" className="text-xs font-black uppercase text-slate-500">CNPJ (Opcional)</Label>
               <InputMask
                 mask="99.999.999/9999-99"
                 value={cnpj}
                 onChange={(e) => setCnpj(e.target.value)}
               >
                 {(inputProps: any) => (
-                  <Input id="edit-cnpj" placeholder="00.000.000/0000-00" {...inputProps} />
+                  <Input id="edit-cnpj" placeholder="00.000.000/0000-00" className="font-bold border-slate-200 focus:border-indigo-500" {...inputProps} />
                 )}
               </InputMask>
             </div>
-            <DialogFooter>
-               <Button type="button" variant="outline" onClick={() => setOpenEdit(false)}>Cancelar</Button>
-               <Button type="submit" disabled={isUpdating}>
+            <DialogFooter className="gap-2">
+               <Button type="button" variant="outline" onClick={() => setOpenEdit(false)} className="font-bold uppercase text-[10px] tracking-widest">Cancelar</Button>
+               <Button type="submit" disabled={isUpdating} className="bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-[10px] tracking-widest">
                  {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Salvar Alterações"}
                </Button>
             </DialogFooter>
@@ -256,15 +283,15 @@ export function CompaniesPage() {
       <Dialog open={openDelete} onOpenChange={setOpenDelete}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-black tracking-tight">Confirmar Exclusão</DialogTitle>
+            <DialogDescription className="font-medium text-slate-500">
               Tem certeza que deseja excluir a empresa <strong>{selectedEmpresa?.nome}</strong>? 
               Essa ação não pode ser desfeita e removerá todos os dados associados (usuários, eventos, clientes, etc).
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenDelete(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOpenDelete(false)} className="font-bold uppercase text-[10px] tracking-widest">Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} className="font-black uppercase text-[10px] tracking-widest shadow-lg shadow-red-100">
               {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Deletar Empresa"}
             </Button>
           </DialogFooter>

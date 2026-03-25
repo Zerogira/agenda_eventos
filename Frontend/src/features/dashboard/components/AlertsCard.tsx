@@ -57,43 +57,44 @@ export function AlertsCard() {
   }
 
   return (
-    <Card className="h-full border-l-4 border-l-amber-500">
-      <CardHeader className="pb-2">
+    <Card className={`h-full border-slate-200 bg-white transition-all duration-300 border-t-4 border-t-orange-500`}>
+      <CardHeader className="pb-1.5 pt-2.5 px-4 bg-slate-50/30">
         <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <CardTitle className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <AlertCircle className="h-3 w-3 text-slate-400" />
             Avisos Importantes
             </CardTitle>
             {alerts.length > 0 && (
-                <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-medium">
-                    {alerts.length}
+                <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full font-black">
+                    {alerts.length} ALERTAS
                 </span>
             )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-2.5">
         {alerts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[150px] text-muted-foreground">
-            <CheckCircle className="h-8 w-8 text-emerald-500 mb-2 opacity-50" />
-            <p className="text-sm">Tudo certo por aqui!</p>
+          <div className="flex flex-col items-center justify-center h-[120px] text-center bg-slate-50/50 rounded-lg border border-dashed border-slate-200 px-4">
+            <CheckCircle className="h-6 w-6 text-emerald-500 mb-2 opacity-50" />
+            <p className="text-sm font-semibold text-slate-600">Nenhum alerta</p>
+            <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-tight">Operação está estável</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {alerts.slice(0, 5).map((alert, idx) => (
+          <div className="space-y-2">
+            {alerts.slice(0, 3).map((alert, idx) => (
               <Link to={alert.link} key={idx} className="block group">
-                <div className={`flex items-start gap-3 p-3 rounded-md text-sm transition-colors border ${
-                    alert.type === 'critical' ? 'bg-red-50 border-red-100 text-red-800 hover:bg-red-100' :
-                    alert.type === 'warning' ? 'bg-amber-50 border-amber-100 text-amber-800 hover:bg-amber-100' :
-                    'bg-blue-50 border-blue-100 text-blue-800 hover:bg-blue-100'
+                <div className={`flex items-start gap-3 p-2.5 rounded-md text-sm transition-colors border ${
+                    alert.type === 'critical' ? 'bg-red-50/50 border-red-100 text-red-900 hover:bg-red-50' :
+                    alert.type === 'warning' ? 'bg-amber-50/50 border-amber-100 text-amber-900 hover:bg-amber-50' :
+                    'bg-blue-50/50 border-blue-100 text-blue-900 hover:bg-blue-50'
                 }`}>
-                  <alert.icon className={`h-5 w-5 mt-0.5 shrink-0 ${
+                  <alert.icon className={`h-4 w-4 mt-0.5 shrink-0 ${
                       alert.type === 'critical' ? 'text-red-600' :
                       alert.type === 'warning' ? 'text-amber-600' :
                       'text-blue-600'
                   }`} />
-                  <div className="flex-1">
-                    <span className="font-medium block leading-tight">{alert.message}</span>
-                    <span className="text-xs opacity-70 group-hover:underline mt-1 block">Resolver agora →</span>
+                  <div className="flex-1 overflow-hidden">
+                    <span className="font-semibold block leading-tight truncate text-xs">{alert.message}</span>
+                    <span className="text-[10px] opacity-70 group-hover:underline mt-1 block uppercase font-bold">Resolver agora →</span>
                   </div>
                 </div>
               </Link>
