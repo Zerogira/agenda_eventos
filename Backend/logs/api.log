@@ -653,3 +653,15 @@
 {"level":30,"time":"2026-03-25T20:12:24.943Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":213,"msg":"request completed"}
 {"level":30,"time":"2026-03-25T20:12:25.406Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":452,"msg":"request completed"}
 {"level":30,"time":"2026-03-25T20:12:25.716Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":306,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:19.295Z","req":{"method":"GET","url":"/api/clientes"},"res":{"statusCode":304},"responseTime":184,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:19.299Z","req":{"method":"GET","url":"/api/funcionarios"},"res":{"statusCode":304},"responseTime":178,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:19.303Z","req":{"method":"GET","url":"/api/brinquedos"},"res":{"statusCode":304},"responseTime":181,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:19.700Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":656,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:20.009Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":307,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:20.264Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":253,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:45.649Z","req":{"method":"GET","url":"/api/funcionarios"},"res":{"statusCode":304},"responseTime":6,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:45.652Z","req":{"method":"GET","url":"/api/clientes"},"res":{"statusCode":304},"responseTime":14,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:45.654Z","req":{"method":"GET","url":"/api/brinquedos"},"res":{"statusCode":304},"responseTime":9,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:45.848Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":214,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:46.113Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":263,"msg":"request completed"}
+{"level":30,"time":"2026-03-25T20:21:46.327Z","req":{"method":"GET","url":"/api/eventos"},"res":{"statusCode":304},"responseTime":213,"msg":"request completed"}
