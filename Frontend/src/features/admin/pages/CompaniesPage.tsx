@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function CompaniesPage() {
-  const { data: empresas, isLoading } = useEmpresas();
+  const { data: empresas, isLoading, isError } = useEmpresas();
   const { mutate: createEmpresa, isPending: isCreating } = useCreateEmpresa();
   const { mutate: updateEmpresa, isPending: isUpdating } = useUpdateEmpresa();
   const { mutate: deleteEmpresa, isPending: isDeleting } = useDeleteEmpresa();
@@ -116,7 +116,14 @@ export function CompaniesPage() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-[400px]">
-      <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      <Loader2 className="h-8 w-8 animate-spin text-[#734ebd]" />
+    </div>
+  );
+
+  if (isError) return (
+    <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+      <p className="text-red-500 font-bold uppercase text-xs tracking-widest">Erro ao carregar empresas</p>
+      <Button onClick={() => window.location.reload()} variant="outline" size="sm">Tentar Novamente</Button>
     </div>
   );
 
@@ -129,7 +136,7 @@ export function CompaniesPage() {
         </div>
         <Dialog open={openCreate} onOpenChange={setOpenCreate}>
           <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest px-6 shadow-lg shadow-indigo-100">
+            <Button className="bg-[#734ebd] hover:bg-[#5e3fbd] text-white font-black text-xs uppercase tracking-widest px-6 shadow-lg shadow-purple-100">
               <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Nova Empresa
             </Button>
           </DialogTrigger>
@@ -147,7 +154,7 @@ export function CompaniesPage() {
                   onChange={(e) => setNome(e.target.value)}
                   required
                   placeholder="Ex: Eventos Ltda"
-                  className="font-bold border-slate-200 focus:border-indigo-500"
+                  className="font-bold border-slate-200 focus:border-[#734ebd]"
                 />
               </div>
               <div className="space-y-2">
@@ -158,11 +165,11 @@ export function CompaniesPage() {
                   onChange={(e) => setCnpj(e.target.value)}
                 >
                   {(inputProps: any) => (
-                    <Input id="create-cnpj" placeholder="00.000.000/0000-00" className="font-bold border-slate-200 focus:border-indigo-500" {...inputProps} />
+                    <Input id="create-cnpj" placeholder="00.000.000/0000-00" className="font-bold border-slate-200 focus:border-[#734ebd]" {...inputProps} />
                   )}
                 </InputMask>
               </div>
-              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-xs tracking-widest h-11" disabled={isCreating}>
+              <Button type="submit" className="w-full bg-[#734ebd] hover:bg-[#5e3fbd] font-black uppercase text-xs tracking-widest h-11" disabled={isCreating}>
                 {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Empresa"}
               </Button>
             </form>
@@ -170,7 +177,7 @@ export function CompaniesPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-indigo-600">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-[#734ebd]">
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
@@ -207,8 +214,8 @@ export function CompaniesPage() {
                   <TableCell>
                       {empresa.convites && empresa.convites.length > 0 ? (
                           <div className="flex items-center gap-2">
-                              <code className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-black border border-indigo-100">{empresa.convites[0].codigo}</code>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50" onClick={() => copyToClipboard(empresa.convites![0].codigo)}>
+                              <code className="bg-purple-50 text-[#734ebd] px-2 py-0.5 rounded text-[10px] font-black border border-purple-100">{empresa.convites[0].codigo}</code>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-purple-400 hover:text-[#734ebd] hover:bg-purple-50" onClick={() => copyToClipboard(empresa.convites![0].codigo)}>
                                   <Copy className="h-3.5 w-3.5" />
                               </Button>
                           </div>
@@ -254,7 +261,7 @@ export function CompaniesPage() {
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
-                className="font-bold border-slate-200 focus:border-indigo-500"
+                className="font-bold border-slate-200 focus:border-[#734ebd]"
               />
             </div>
             <div className="space-y-2">
@@ -265,13 +272,13 @@ export function CompaniesPage() {
                 onChange={(e) => setCnpj(e.target.value)}
               >
                 {(inputProps: any) => (
-                  <Input id="edit-cnpj" placeholder="00.000.000/0000-00" className="font-bold border-slate-200 focus:border-indigo-500" {...inputProps} />
+                  <Input id="edit-cnpj" placeholder="00.000.000/0000-00" className="font-bold border-slate-200 focus:border-[#734ebd]" {...inputProps} />
                 )}
               </InputMask>
             </div>
             <DialogFooter className="gap-2">
                <Button type="button" variant="outline" onClick={() => setOpenEdit(false)} className="font-bold uppercase text-[10px] tracking-widest">Cancelar</Button>
-               <Button type="submit" disabled={isUpdating} className="bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-[10px] tracking-widest">
+               <Button type="submit" disabled={isUpdating} className="bg-[#734ebd] hover:bg-[#5e3fbd] font-black uppercase text-[10px] tracking-widest">
                  {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Salvar Alterações"}
                </Button>
             </DialogFooter>

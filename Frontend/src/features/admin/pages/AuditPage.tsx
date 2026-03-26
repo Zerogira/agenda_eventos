@@ -50,28 +50,40 @@ export function AuditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-0.5">
-        <h3 className="text-xl font-black text-slate-900">Auditoria do Sistema</h3>
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Registro de todas as operações e acessos</p>
+      <div className="flex flex-col gap-1">
+        <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+          <Filter className="h-5 w-5 text-[#734ebd]" />
+          Auditoria do Sistema
+        </h3>
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Histórico completo de ações e mudanças na plataforma</p>
       </div>
 
-      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-indigo-600">
-        <CardHeader className="bg-slate-50/30 border-b border-slate-100 py-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-[#734ebd]">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input 
+                placeholder="Filtrar por Usuário ID..." 
+                className="pl-10 font-bold border-slate-200 focus:border-[#734ebd]"
+                value={filters.userId}
+                onChange={(e) => handleFilterChange("userId", e.target.value)}
+              />
+            </div>
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="Filtrar por Recurso (ex: Evento)" 
-                className="pl-10 font-bold border-slate-200 focus:border-indigo-500"
+                className="pl-10 font-bold border-slate-200 focus:border-[#734ebd]"
                 value={filters.resource}
                 onChange={(e) => handleFilterChange("resource", e.target.value)}
               />
             </div>
-            <div className="flex-1 relative">
-              <Filter className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <div className="relative flex-1 min-w-[200px]">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="Filtrar por Ação (ex: CREATE)" 
-                className="pl-10 font-bold border-slate-200 focus:border-indigo-500"
+                className="pl-10 font-bold border-slate-200 focus:border-[#734ebd]"
                 value={filters.action}
                 onChange={(e) => handleFilterChange("action", e.target.value)}
               />
@@ -81,11 +93,12 @@ export function AuditPage() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#734ebd]" />
             </div>
           ) : isError ? (
-            <div className="text-center text-red-500 py-12 font-bold uppercase text-xs tracking-widest">
-              Erro ao carregar logs de auditoria.
+            <div className="text-center text-red-500 py-12 font-bold uppercase text-xs tracking-widest flex flex-col items-center gap-4">
+              <span>Erro ao carregar logs de auditoria.</span>
+              <Button onClick={() => window.location.reload()} variant="outline" size="sm">Tentar Novamente</Button>
             </div>
           ) : (
             <>

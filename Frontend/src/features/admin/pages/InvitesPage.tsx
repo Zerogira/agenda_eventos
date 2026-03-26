@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export function InvitesPage() {
-  const { data: convites, isLoading: loadingConvites } = useConvites();
+  const { data: convites, isLoading: loadingConvites, isError } = useConvites();
   const { data: empresas } = useEmpresas();
   const { mutate: createConvite, isPending } = useCreateConvite();
   const [open, setOpen] = useState(false);
@@ -68,7 +68,14 @@ export function InvitesPage() {
 
   if (loadingConvites) return (
     <div className="flex items-center justify-center h-[400px]">
-      <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      <Loader2 className="h-8 w-8 animate-spin text-[#734ebd]" />
+    </div>
+  );
+
+  if (isError) return (
+    <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+      <p className="text-red-500 font-bold uppercase text-xs tracking-widest">Erro ao carregar convites</p>
+      <Button onClick={() => window.location.reload()} variant="outline" size="sm">Tentar Novamente</Button>
     </div>
   );
 
@@ -81,7 +88,7 @@ export function InvitesPage() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest px-6 shadow-lg shadow-indigo-100">
+            <Button className="bg-[#734ebd] hover:bg-[#5e3fbd] text-white font-black text-xs uppercase tracking-widest px-6 shadow-lg shadow-purple-100">
               <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Novo Convite
             </Button>
           </DialogTrigger>
@@ -93,7 +100,7 @@ export function InvitesPage() {
               <div className="space-y-2">
                 <Label htmlFor="empresa" className="text-xs font-black uppercase text-slate-500">Empresa Destino</Label>
                 <Select value={empresaId} onValueChange={setEmpresaId} required>
-                  <SelectTrigger className="font-bold border-slate-200 focus:ring-indigo-500">
+                  <SelectTrigger className="font-bold border-slate-200 focus:ring-[#734ebd]">
                     <SelectValue placeholder="Selecione a empresa" />
                   </SelectTrigger>
                   <SelectContent>
@@ -113,10 +120,10 @@ export function InvitesPage() {
                   min="1"
                   value={expiresInDays}
                   onChange={(e) => setExpiresInDays(e.target.value)}
-                  className="font-bold border-slate-200 focus:border-indigo-500"
+                  className="font-bold border-slate-200 focus:border-[#734ebd]"
                 />
               </div>
-              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-xs tracking-widest h-11" disabled={isPending}>
+              <Button type="submit" className="w-full bg-[#734ebd] hover:bg-[#5e3fbd] font-black uppercase text-xs tracking-widest h-11" disabled={isPending}>
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Gerar Código"}
               </Button>
             </form>
@@ -124,7 +131,7 @@ export function InvitesPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-indigo-600">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-t-4 border-t-[#734ebd]">
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
@@ -145,9 +152,9 @@ export function InvitesPage() {
               return (
                 <TableRow key={convite.id} className={cn("hover:bg-slate-50/50 border-slate-100 transition-colors", idx % 2 === 0 ? "bg-white" : "bg-slate-50/20")}>
                   <TableCell className="py-4">
-                    <code className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[11px] font-black border border-indigo-100">{convite.codigo}</code>
+                    <code className="bg-purple-50 text-[#734ebd] px-2 py-0.5 rounded text-[11px] font-black border border-purple-100">{convite.codigo}</code>
                   </TableCell>
-                  <TableCell className="font-bold text-slate-900">{convite.empresa.nome}</TableCell>
+                  <TableCell className="font-bold text-slate-900">{convite.empresa?.nome || "Empresa não encontrada"}</TableCell>
                   <TableCell className="text-slate-500 font-medium text-xs">{format(new Date(convite.createdAt), "dd/MM/yy", { locale: ptBR })}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
@@ -173,7 +180,7 @@ export function InvitesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50"
+                        className="h-8 w-8 text-purple-400 hover:text-[#734ebd] hover:bg-purple-50"
                         onClick={() => copyToClipboard(convite.codigo)}
                         title="Copiar Código"
                       >
@@ -182,7 +189,7 @@ export function InvitesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50"
+                        className="h-8 w-8 text-purple-400 hover:text-[#734ebd] hover:bg-purple-50"
                         onClick={() => copyToClipboard(convite.codigo, true)}
                         title="Copiar Link de Registro"
                       >

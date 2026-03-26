@@ -16,25 +16,25 @@ export function AdminPage() {
         <TabsList className="flex w-full lg:w-fit bg-slate-100/50 p-1 rounded-xl border border-slate-200/60 mb-6">
           <TabsTrigger 
             value="empresas" 
-            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-indigo-600 text-slate-500 hover:text-slate-700"
+            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-[#734ebd] data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-[#734ebd] text-slate-500 hover:text-slate-700"
           >
             Empresas
           </TabsTrigger>
           <TabsTrigger 
             value="convites" 
-            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-indigo-600 text-slate-500 hover:text-slate-700"
+            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-[#734ebd] data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-[#734ebd] text-slate-500 hover:text-slate-700"
           >
             Convites
           </TabsTrigger>
           <TabsTrigger 
             value="buscador" 
-            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-indigo-600 text-slate-500 hover:text-slate-700"
+            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-[#734ebd] data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-[#734ebd] text-slate-500 hover:text-slate-700"
           >
             Buscador
           </TabsTrigger>
           <TabsTrigger 
             value="auditoria" 
-            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-indigo-600 text-slate-500 hover:text-slate-700"
+            className="flex-1 lg:px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-[#734ebd] data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-b-[#734ebd] text-slate-500 hover:text-slate-700"
           >
             Auditoria
           </TabsTrigger>

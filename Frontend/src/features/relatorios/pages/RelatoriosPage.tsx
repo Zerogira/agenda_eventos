@@ -95,11 +95,11 @@ export function RelatoriosPage() {
   }, [allEvents]);
 
   useEffect(() => {
-    // If we have already searched, re-apply filters when allEvents updates
-    if (hasSearched && allEvents.length > 0) {
+    // Aplica filtros sempre que houver novos dados ou mudança nos parâmetros
+    if (allEvents.length > 0) {
         applyFilters(allEvents);
     }
-  }, [allEvents, hasSearched, selectedYear, visualization, statusFilter, clientFilter, teamFilter, toyFilter]);
+  }, [allEvents, selectedYear, visualization, statusFilter, clientFilter, teamFilter, toyFilter, searchTerm]);
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => ({

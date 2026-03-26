@@ -30,30 +30,37 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function SearchPage() {
-  const { data: empresas, isLoading: loadingEmpresas } = useEmpresas();
+  const { data: empresas, isLoading: loadingEmpresas, isError } = useEmpresas();
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>("");
   
-  const { data: empresaDetails, isLoading: loadingDetails } = useEmpresaDetails(selectedEmpresaId);
+  const { data: empresaDetails, isLoading: loadingDetails, isError: isErrorDetails } = useEmpresaDetails(selectedEmpresaId);
 
   if (loadingEmpresas) return (
     <div className="flex items-center justify-center h-[400px]">
-      <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      <Loader2 className="h-8 w-8 animate-spin text-[#734ebd]" />
+    </div>
+  );
+
+  if (isError) return (
+    <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+      <p className="text-red-500 font-bold uppercase text-xs tracking-widest">Erro ao carregar lista de empresas</p>
+      <Button onClick={() => window.location.reload()} variant="outline" size="sm">Tentar Novamente</Button>
     </div>
   );
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 p-6 bg-white rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-indigo-600">
+      <div className="flex flex-col gap-4 p-6 bg-white rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-[#734ebd]">
         <div className="flex flex-col gap-1">
           <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-            <Search className="h-5 w-5 text-indigo-500" />
+            <Search className="h-5 w-5 text-[#734ebd]" />
             Buscador de Organizações
           </h3>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Selecione uma empresa para auditar seus dados internos</p>
         </div>
         <div className="max-w-md w-full">
           <Select value={selectedEmpresaId} onValueChange={setSelectedEmpresaId}>
-            <SelectTrigger id="empresa-select" className="w-full font-bold border-slate-200 focus:ring-indigo-500 h-11">
+            <SelectTrigger id="empresa-select" className="w-full font-bold border-slate-200 focus:ring-[#734ebd] h-11">
               <SelectValue placeholder="Escolha uma empresa para detalhar..." />
             </SelectTrigger>
             <SelectContent>
@@ -70,7 +77,7 @@ export function SearchPage() {
       {loadingDetails ? (
         <div className="flex justify-center py-20">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+            <Loader2 className="h-10 w-10 animate-spin text-[#734ebd]" />
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Carregando detalhes...</span>
           </div>
         </div>
@@ -79,7 +86,7 @@ export function SearchPage() {
           
           {/* Header Info */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-indigo-500">
+             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-[#734ebd]">
                <CardHeader className="pb-2 pt-4 px-4 bg-slate-50/30">
                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuários</CardTitle>
                </CardHeader>
@@ -87,7 +94,7 @@ export function SearchPage() {
                  <div className="text-2xl font-black text-slate-900">{empresaDetails.usuarios?.length || 0}</div>
                </CardContent>
              </Card>
-             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-indigo-500">
+             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-[#734ebd]">
                <CardHeader className="pb-2 pt-4 px-4 bg-slate-50/30">
                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Clientes</CardTitle>
                </CardHeader>
@@ -95,7 +102,7 @@ export function SearchPage() {
                  <div className="text-2xl font-black text-slate-900">{empresaDetails.clientes?.length || 0}</div>
                </CardContent>
              </Card>
-             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-indigo-500">
+             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-[#734ebd]">
                <CardHeader className="pb-2 pt-4 px-4 bg-slate-50/30">
                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Funcionários</CardTitle>
                </CardHeader>
@@ -103,7 +110,7 @@ export function SearchPage() {
                  <div className="text-2xl font-black text-slate-900">{empresaDetails.funcionarios?.length || 0}</div>
                </CardContent>
              </Card>
-             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-indigo-500">
+             <Card className="border-slate-200 shadow-sm bg-white overflow-hidden border-t-2 border-t-[#734ebd]">
                <CardHeader className="pb-2 pt-4 px-4 bg-slate-50/30">
                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CNPJ</CardTitle>
                </CardHeader>
@@ -117,10 +124,10 @@ export function SearchPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
               <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <Users className="h-4 w-4 text-indigo-500" />
+                <Users className="h-4 w-4 text-[#734ebd]" />
                 Usuários do Sistema
               </h4>
-              <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-100 font-black text-[10px] uppercase px-2">
+              <Badge variant="outline" className="bg-purple-50 text-[#734ebd] border-purple-100 font-black text-[10px] uppercase px-2">
                 {empresaDetails.usuarios?.length || 0} Total
               </Badge>
             </div>

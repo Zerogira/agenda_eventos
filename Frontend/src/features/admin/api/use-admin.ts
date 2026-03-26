@@ -39,8 +39,9 @@ export const useEmpresas = () => {
     return useQuery({
         queryKey: ['admin', 'empresas'],
         queryFn: async () => {
-            const { data } = await api.get<Empresa[]>('/admin/empresas');
-            return data;
+            const { data } = await api.get<any>('/admin/empresas');
+            if (data && data.data && Array.isArray(data.data)) return data.data;
+            return Array.isArray(data) ? data : [];
         }
     });
 };
@@ -50,7 +51,8 @@ export const useEmpresaDetails = (id?: string) => {
         queryKey: ['admin', 'empresa', id],
         queryFn: async () => {
             if (!id) return null;
-            const { data } = await api.get<Empresa>(`/admin/empresas/${id}`);
+            const { data } = await api.get<any>(`/admin/empresas/${id}`);
+            if (data && data.data) return data.data;
             return data;
         },
         enabled: !!id
@@ -99,8 +101,9 @@ export const useConvites = () => {
     return useQuery({
         queryKey: ['admin', 'convites'],
         queryFn: async () => {
-            const { data } = await api.get<Convite[]>('/admin/convites');
-            return data;
+            const { data } = await api.get<any>('/admin/convites');
+            if (data && data.data && Array.isArray(data.data)) return data.data;
+            return Array.isArray(data) ? data : [];
         }
     });
 };

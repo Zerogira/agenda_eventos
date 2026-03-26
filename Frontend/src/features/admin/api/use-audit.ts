@@ -41,7 +41,16 @@ export const useAuditLogs = (page = 1, filters?: any) => {
         if (filters.userId) params.append('userId', filters.userId);
       }
 
-      const { data } = await api.get<AuditLogResponse>(`/system-logs?${params.toString()}`);
+      const { data } = await api.get<any>(`/system-logs?${params.toString()}`);
+      
+      // Handle nested data if present
+      if (data && data.data && Array.isArray(data.data.data)) {
+          return {
+              data: data.data.data,
+              meta: data.data.meta
+          };
+      }
+      
       return data;
     },
   });
