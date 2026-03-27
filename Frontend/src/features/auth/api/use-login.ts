@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { LoginCredentials, AuthResponse } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { feedback } from '@/lib/toast-utils';
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -15,11 +15,11 @@ export const useLogin = () => {
     onSuccess: (data) => {
       localStorage.setItem('token', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
-      toast.success('Login realizado com sucesso!');
+      feedback.loginSuccess();
       navigate('/');
     },
     onError: (error) => {
-      toast.error('Erro ao realizar login. Verifique suas credenciais.');
+      feedback.loginError();
       console.error(error);
     },
   });

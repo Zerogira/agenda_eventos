@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Copy, Pencil, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { feedback } from "@/lib/toast-utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import InputMask from "react-input-mask";
@@ -51,18 +51,12 @@ export function CompaniesPage() {
           setOpenCreate(false);
           setNome("");
           setCnpj("");
-          toast.success("Empresa criada com sucesso!");
+          feedback.createSuccess("Empresa");
           if (data.convite) {
-             toast("Código de convite gerado: " + data.convite.codigo, {
-                 duration: 10000,
-                 action: {
-                     label: "Copiar",
-                     onClick: () => navigator.clipboard.writeText(data.convite.codigo)
-                 }
-             });
+             feedback.copySuccess("Código de convite: " + data.convite.codigo);
           }
         },
-        onError: () => toast.error("Erro ao criar empresa"),
+        onError: () => feedback.apiError("Erro ao criar empresa"),
       }
     );
   };
@@ -78,9 +72,9 @@ export function CompaniesPage() {
           setSelectedEmpresa(null);
           setNome("");
           setCnpj("");
-          toast.success("Empresa atualizada com sucesso!");
+          feedback.updateSuccess("Empresa");
         },
-        onError: () => toast.error("Erro ao atualizar empresa"),
+        onError: () => feedback.apiError("Erro ao atualizar empresa"),
       }
     );
   };
@@ -91,9 +85,9 @@ export function CompaniesPage() {
       onSuccess: () => {
         setOpenDelete(false);
         setSelectedEmpresa(null);
-        toast.success("Empresa removida com sucesso!");
+        feedback.deleteSuccess("Empresa");
       },
-      onError: () => toast.error("Erro ao remover empresa"),
+      onError: () => feedback.apiError("Erro ao remover empresa"),
     });
   };
 
@@ -111,7 +105,7 @@ export function CompaniesPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Código copiado!");
+    feedback.copySuccess("Código");
   };
 
   if (isLoading) return (

@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Copy } from "lucide-react";
-import { toast } from "sonner";
+import { feedback } from "@/lib/toast-utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -44,7 +44,7 @@ export function InvitesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!empresaId) return toast.error("Selecione uma empresa");
+    if (!empresaId) return feedback.apiError("Selecione uma empresa");
 
     createConvite(
       { empresaId, expiresInDays: parseInt(expiresInDays) },
@@ -53,9 +53,9 @@ export function InvitesPage() {
           setOpen(false);
           setEmpresaId("");
           setExpiresInDays("30");
-          toast.success("Convite gerado com sucesso!");
+          feedback.createSuccess("Convite");
         },
-        onError: () => toast.error("Erro ao gerar convite"),
+        onError: () => feedback.apiError("Não foi possível gerar o convite."),
       }
     );
   };
@@ -63,7 +63,7 @@ export function InvitesPage() {
   const copyToClipboard = (text: string, isFullLink = false) => {
     const content = isFullLink ? `${window.location.origin}/register?code=${text}` : text;
     navigator.clipboard.writeText(content);
-    toast.success(isFullLink ? "Link completo copiado!" : "Código copiado!");
+    feedback.copySuccess(isFullLink ? "Link de registro" : "Código");
   };
 
   if (loadingConvites) return (
